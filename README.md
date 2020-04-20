@@ -1,6 +1,6 @@
 # covid19-pooling
 
-This repo will soon contain the code for
+This is the code used for the calculations in the paper
 
 "EVALUATION OF POOL-BASED TESTING APPROACHES TO ENABLE POPULATION-WIDE SCREENING FOR COVID-19"
 
