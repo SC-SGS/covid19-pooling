@@ -115,9 +115,9 @@ def calculation():
 
     # strings identifiying the test strategies
     test_strategies = [
-        'individual testing',
-        'two stage testing',
-        'binary splitting',
+        'individual-testing',
+        'two-stage-testing',
+        'binary-splitting',
         'RBS',
         'purim',
         'sobel'

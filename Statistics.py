@@ -39,13 +39,13 @@ class Corona_Simulation_Statistics():
         if self.test_strategy == 'binary splitting (groupsize independent)':
             self.test_instance.binary_splitting()
         # time dependent methods
-        elif self.test_strategy == 'binary splitting':
+        elif self.test_strategy == 'binary-splitting':
             self.test_instance.binary_splitting_time_dependent(
                 self.num_simultaneous_tests, self.test_duration, self.group_size)
-        elif self.test_strategy == 'individual testing':
+        elif self.test_strategy == 'individual-testing':
             self.test_instance.individual_testing_time_dependent(
                 self.num_simultaneous_tests, self.test_duration)
-        elif self.test_strategy == 'two stage testing':
+        elif self.test_strategy == 'two-stage-testing':
             self.test_instance.two_stage_testing_time_dependent(
                 self.num_simultaneous_tests, self.test_duration, self.group_size)
         elif self.test_strategy == 'RBS':
@@ -65,7 +65,7 @@ class Corona_Simulation_Statistics():
         self.number_sick_people = np.zeros(number_of_instances)
         self.num_confirmed_sick_individuals = np.zeros(number_of_instances)
         self.num_sent_to_quarantine = np.zeros(number_of_instances)
-        self.number_groupwise_tests = {}
+        # self.number_groupwise_tests = {}
         self.num_confirmed_per_test = np.zeros(number_of_instances)
 
         # Generate test data for the desired number of instances.
@@ -79,10 +79,10 @@ class Corona_Simulation_Statistics():
             self.num_confirmed_sick_individuals[i] = len(
                 self.test_instance.confirmed_sick_individuals)
             self.num_sent_to_quarantine[i] = len(self.test_instance.sick_individuals)
-            self.number_groupwise_tests[i] = self.test_instance.number_groupwise_tests
+            # self.number_groupwise_tests[i] = self.test_instance.number_groupwise_tests
+
             # derived metrics
             self.num_confirmed_per_test[i] = self.num_confirmed_sick_individuals[i] / self.number_of_tests[i]
-
         # Perform statistical analysis
         # means
         self.e_number_of_tests = np.mean(self.number_of_tests)
@@ -104,7 +104,7 @@ class Corona_Simulation_Statistics():
         self.sd_num_sent_to_quarantine = np.std(self.num_sent_to_quarantine)
         self.sd_num_confirmed_per_test = np.std(self.num_confirmed_per_test)
 
-        self.e_number_groupwise_tests = np.zeros(len(self.number_groupwise_tests[0]))
-        for key in self.number_groupwise_tests:
-            self.e_number_groupwise_tests += self.number_groupwise_tests[key]
-        self.e_number_groupwise_tests /= len(self.number_groupwise_tests)
+        # self.e_number_groupwise_tests = np.zeros(len(self.number_groupwise_tests[0]))
+        # for key in self.number_groupwise_tests:
+        #     self.e_number_groupwise_tests += self.number_groupwise_tests[key]
+        # self.e_number_groupwise_tests /= len(self.number_groupwise_tests)
