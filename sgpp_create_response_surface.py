@@ -53,7 +53,7 @@ if __name__ == "__main__":
 
     objFunc = objFuncSGpp(f)
 
-    for level in range(4):
+    for level in [1]:  # range(5):
         reSurf = pysgpp.SplineResponseSurface(
             objFunc, pysgpp.DataVector(lb[:dim]), pysgpp.DataVector(ub[:dim]),
             pysgpp.Grid.stringToGridType(gridType), degree)
@@ -61,21 +61,21 @@ if __name__ == "__main__":
         logging.info('Begin creating response surface')
         start = time.time()
         # create surrogate with regular sparse grid
-        reSurf.regular(level)
+        # reSurf.regular(level)
 
         # create surrogate with spatially adaptive sparse grid
-        # numPoints = 10000  # max number of grid points
-        # initialLevel = 1    # nitial level
-        # numRefine = 50       # number of grid points refined in each step
-        # verbose = False  # verbosity of subroutines
-        # reSurf.surplusAdaptive(numPoints, initialLevel, numRefine, verbose)
+        numPoints = 400  # max number of grid points
+        initialLevel = 1    # nitial level
+        numRefine = 10       # number of grid points refined in each step
+        verbose = False  # verbosity of subroutines
+        reSurf.surplusAdaptive(numPoints, initialLevel, numRefine, verbose)
 
         runtime = time.time()-start
         logging.info('\nDone. Created response surface with {} grid points, took {}s'.format(reSurf.getSize(), runtime))
         objFunc.cleanUp()
 
         # measure error
-        numMCPoints = 100
+        numMCPoints = 1000
         error_reference_data_file = f'precalc/values/mc{numMCPoints}_{test_strategy}_{dim}dim_{qoi}.pkl'
         with open(error_reference_data_file, 'rb') as fp:
             error_reference_data = pickle.load(fp)

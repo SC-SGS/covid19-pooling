@@ -5,7 +5,7 @@ import pickle
 import logging
 from sgpp_precalc_parallel import precalc_parallel
 
-numMCPoints = 100
+numMCPoints = 1000
 
 gridType, dim, degree, test_strategy, qoi, name, sample_size, num_daily_tests, \
     test_duration, num_simultaneous_tests, evalType, scale_factor_pop,\
