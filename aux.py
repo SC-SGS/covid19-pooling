@@ -60,29 +60,36 @@ def _split_groups(active_groups):
                   ] + [[active_groups[0][middle:], active_groups[1][middle:]]]
     return test_group
 
-# === Generate Model parameters ===
-# def _estimate_sample_size(prob_sick, confidence_sick_exists):
-#     estimation = math.log(confidence_sick_exists, 1-prob_sick)
-#     return estimation
 
+def generate_data(sample_size, prob_sick):
+    """ 
+    Function to generate data of consecutively numbered individuals which are infected 
+    with chance prob_sick
+    """
+    rawdata = []
+    sick_list = []
+    number_sick_people = 0
+    sick_list_indices = []
+    # Generate a sample of raw data: a list of sample_size instances, equally distributed between 0 and 1
+    for i in range(sample_size):
+        rawdata += [np.random.rand()]  # [ran.random()]
 
-# def _model_success_rate(sample_size, success_rate_test):
-#     current_success_rate = success_rate_test * \
-#         (1/2)**(math.log(sample_size, 2))
-#     return current_success_rate
-
-
-# def _find_number_of_permutations(current_success_rate, success_rate_test):
-#     number_of_permutations = math.ceil(
-#         math.log(success_rate_test, 1-current_success_rate))
-#     return number_of_permutations
-
-
-# def _generate_permutations(individuals, number_of_permutations):
-#     list_of_permutations_of_individuals = []
-#     for i in range(number_of_permutations):
-#         while len(list_of_permutations_of_individuals) <= i:
-#             candidate = list(np.random.permutation(individuals))
-#             if candidate not in list_of_permutations_of_individuals:
-#                 list_of_permutations_of_individuals.append(candidate)
-#     return list_of_permutations_of_individuals
+    # Decide, who is infected
+    for i in range(sample_size):
+        if rawdata[i] <= prob_sick:
+            sick_list += [1]
+            sick_list_indices.append(i)
+            number_sick_people += 1
+        else:
+            sick_list += [0]
+    if number_sick_people == 0:
+        print(
+            'There would have been zero infected (probably sample_size is quite small). For Debugging purposes one infection has been added')
+        infected_individual_index = 0
+        rawdata[infected_individual_index] = 0
+        sick_list[infected_individual_index] = 1
+        sick_list_indices.append(infected_individual_index)
+        number_sick_people = 1
+    # print('generated data with {} sick people among total {}'.format(number_sick_people, sample_size))
+    # print('they are {}\n----\n'.format(sick_list_indices))
+    return rawdata, sick_list, number_sick_people

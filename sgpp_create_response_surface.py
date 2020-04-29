@@ -13,27 +13,46 @@ def getSetup():
     logging.basicConfig(stream=sys.stderr, level=logging.CRITICAL)
 
     gridType = 'nakBsplineBoundary'
-    dim = 1
+    dim = 4
     degree = 3
 #    test_strategy = 'individual-testing'
     test_strategy = 'binary-splitting'
     qoi = 'ppt'
     name = name = f'{test_strategy}_{qoi}_dim{dim}_deg{degree}'
-    return gridType, dim, degree, test_strategy, qoi, name
+
+    sample_size = 100000
+    num_daily_tests = 1000
+    test_duration = 5
+    num_simultaneous_tests = int(num_daily_tests*test_duration/24.0)
+    evalType = 'multiMC'
+    scale_factor_pop = 1
+    number_of_instances = 1
+    prob_sick_range = [0.001, 0.3]
+    success_rate_test_range = [0.3, 0.99]
+    false_positive_rate_test_range = [0.01, 0.2]
+    group_size_range = [1, 32]
+    lb = np.array([prob_sick_range[0], success_rate_test_range[0],
+                   false_positive_rate_test_range[0], group_size_range[0]])
+    ub = np.array([prob_sick_range[1], success_rate_test_range[1],
+                   false_positive_rate_test_range[1], group_size_range[1]])
+
+    return gridType, dim, degree, test_strategy, qoi, name, sample_size, num_daily_tests,\
+        test_duration, num_simultaneous_tests, evalType, scale_factor_pop, number_of_instances, lb, ub
 
 
 if __name__ == "__main__":
-    saveReSurf = True
-    gridType, dim, degree, test_strategy, qoi, name = getSetup()
+    saveReSurf = False
+    gridType, dim, degree, test_strategy, qoi, name, sample_size, num_daily_tests, \
+        test_duration, num_simultaneous_tests, evalType, scale_factor_pop,\
+        number_of_instances, lb, ub = getSetup()
     f = sgpp_simStorage(dim, test_strategy,  qoi)
 
     objFunc = objFuncSGpp(f)
-    lb = objFunc.getLowerBounds()
-    ub = objFunc.getUpperBounds()
 
-    for level in range(6):
+    for level in range(5):
         reSurf = pysgpp.SplineResponseSurface(
-            objFunc, lb, ub, pysgpp.Grid.stringToGridType(gridType), degree)
+            objFunc, pysgpp.DataVector(lb), pysgpp.DataVector(ub),
+            pysgpp.Grid.stringToGridType(gridType), degree)
 
         logging.info('Begin creating response surface')
         start = time.time()
@@ -53,17 +72,30 @@ if __name__ == "__main__":
 
         # measure error
         numMCPoints = 100
-        error_reference_data_file = f'precalc/mc{numMCPoints}_{dim}dim_{qoi}.pkl'
+        error_reference_data_file = f'precalc/values/mc{numMCPoints}_{dim}dim_{qoi}.pkl'
         with open(error_reference_data_file, 'rb') as fp:
             error_reference_data = pickle.load(fp)
         l2Error = 0
         for key in error_reference_data:
-            true_value = error_reference_data[key]
-            reSurf_value = reSurf.eval(pysgpp.DataVector(key))
+            [true_e_time, true_e_num_tests, true_e_num_confirmed_sick_individuals] = error_reference_data[key]
+            if qoi == 'time':
+                true_value = true_e_time
+            elif qoi == 'numtests':
+                true_value = true_e_num_tests
+            elif qoi == 'numconfirmed':
+                true_value = true_e_num_confirmed_sick_individuals
+            elif qoi == 'ppt':
+                true_value = true_e_num_confirmed_sick_individuals/true_e_num_tests
+            prob_sick = key[0]
+            success_rate_test = key[1]
+            false_positive_rate = key[2]
+            group_size = key[3]
+            point = pysgpp.DataVector([prob_sick, success_rate_test, false_positive_rate, group_size])
+            reSurf_value = reSurf.eval(point)
             #print(f'{key}    {true_value}    {reSurf_value}')
             l2Error += (true_value-reSurf_value)**2
         l2Error = np.sqrt(l2Error)
-        print(f"level {level} {reSurf.getSize()} grid points, l2 error: {l2Error}")
+        print(f"level {level} {reSurf.getSize()} grid points, l2 error: {l2Error}\n")
 
         if saveReSurf:
             path = 'precalc/reSurf'
@@ -79,4 +111,4 @@ if __name__ == "__main__":
             dummyCoeff = np.array([coeffs[i] for i in range(coeffs.getSize())])
             np.savetxt(f'{path}//np_coeff_{name}.dat', dummyCoeff)
             logging.info('wrote response surface to /data')
-            print(f'saved response surface as {path}/{name}')
+            #print(f'saved response surface as {path}/{name}')

@@ -1,25 +1,29 @@
+import ipdb
+import sys
 import numpy as np
 from sgpp_create_response_surface import getSetup
-from sgpp_simStorage import sgpp_simStorage
 import pickle
+import logging
+from sgpp_precalc_parallel import precalc_parallel
 
-
-gridType, dim, degree, test_strategy, qoi, _ = getSetup()
 numMCPoints = 100
 
-f = sgpp_simStorage(dim, test_strategy, qoi)
-lb_sgpp, ub_sgpp = f.getDomain()
-lb = lb_sgpp.array()
-ub = ub_sgpp.array()
+gridType, dim, degree, test_strategy, qoi, name, sample_size, num_daily_tests, \
+    test_duration, num_simultaneous_tests, evalType, scale_factor_pop,\
+    number_of_instances, lb, ub = getSetup()
+
 
 unitpoints = np.random.rand(numMCPoints, dim)
 mcData = {}
-for i in range(numMCPoints):
-    for d in range(dim):
-        point = lb + (ub-lb)*unitpoints[i, :]
-        mcData[tuple(point)] = f.eval(point)
+points = [lb + (ub-lb)*point for point in unitpoints]
+multiprocessing_dict = precalc_parallel(points, sample_size, test_duration, num_simultaneous_tests,
+                                        number_of_instances, scale_factor_pop, test_strategy, evalType)
+regular_dict = {}
+for key in multiprocessing_dict:
+    regular_dict[key] = multiprocessing_dict[key]
+
 filename = f'precalc/values/mc{numMCPoints}_{dim}dim_{qoi}.pkl'
 with open(filename, 'wb+') as fp:
-    pickle.dump(mcData, fp)
+    pickle.dump(regular_dict, fp)
 
 print(f'calculated data for {numMCPoints} random points, saved as {filename}')

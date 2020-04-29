@@ -16,7 +16,7 @@ class objFuncSGpp(pysgpp.ScalarFunction):
         super(objFuncSGpp, self).__init__(self.dim)
 
     def eval(self, x):
-        return self.objFunc.eval(x)
+        return self.objFunc.eval(x, recalculate=False, evalType='multiMC')
 
     def getDim(self):
         return self.dim
@@ -42,12 +42,41 @@ class objFuncSGpp(pysgpp.ScalarFunction):
             warnings.warn('This objective function does not have precalculated data')
 
 
+def simulate(sample_size, prob_sick, success_rate_test, false_positive_rate,
+             test_duration, group_size, num_simultaneous_tests, number_of_instances,
+             scale_factor_pop, test_strategy, evalType):
+    # relict parameters. We won't touch these in the near future
+    tests_repetitions = 1
+    test_result_decision_strategy = 'max'
+
+    stat_test = Corona_Simulation_Statistics(prob_sick, success_rate_test,
+                                             false_positive_rate, test_strategy,
+                                             test_duration, group_size,
+                                             tests_repetitions, test_result_decision_strategy)
+    start = time.time()
+    if evalType == 'multiMC':
+        logging.info(f'multi MC')
+        # TODO the num simultaneous tests must be non-constant for >1D
+        stat_test.multilevel_MonteCarlo([10000, 25000, 50000, 100000],
+                                        [num_simultaneous_tests]*4,
+                                        [16, 8, 4, 2])
+    elif evalType == 'MC':
+        logging.info(f'MC')
+        stat_test.statistical_analysis(sample_size, num_simultaneous_tests, number_of_instances)
+    runtime = time.time()-start
+    logging.info(f'runtime: {runtime}s\n')
+
+    e_time = stat_test.e_time*scale_factor_pop
+    e_num_tests = stat_test.e_number_of_tests*scale_factor_pop
+    e_num_confirmed_sick_individuals = stat_test.e_num_confirmed_sick_individuals*scale_factor_pop
+    return e_time, e_num_tests, e_num_confirmed_sick_individuals
+
+
 class sgpp_simStorage():
     def __init__(self, dim, test_strategy, qoi):
         self.dim = dim
         self.test_strategy = test_strategy
         self.qoi = qoi
-        self.number_of_instances = 3  # 10
 
         # set ranges for all 7 parameters
         # tests_per_day and population are combined into one parameter, so effectively there are only 6 dimensions
@@ -57,16 +86,16 @@ class sgpp_simStorage():
         success_rate_test_range = [0.3, 0.99]
         false_positive_rate_test_range = [0.01, 0.2]
         group_size_range = [1, 32]
-        test_duration_range = [0.1, 10]
-        tests_per_day_range = [100, 1000000]
-        population_range = [10000, 400000000]
+        # test_duration_range = [0.1, 10]
+        # tests_per_day_range = [100, 1000000]
+        # population_range = [10000, 400000000]
         # for dimensionality < 7 the remaining parameters get default values
-        self.default_parameters = [0.1, 0.99, 0.01, 8, 5, 1000, 100000]
+        self.default_parameters = [0.1, 0.99, 0.01, 8, ]
 
         lb = [prob_sick_range[0], success_rate_test_range[0], false_positive_rate_test_range[0],
-              group_size_range[0], test_duration_range[0], tests_per_day_range[0], population_range[0]]
+              group_size_range[0]]  # , test_duration_range[0], tests_per_day_range[0], population_range[0]]
         ub = [prob_sick_range[1], success_rate_test_range[1], false_positive_rate_test_range[1],
-              group_size_range[1], test_duration_range[1], tests_per_day_range[1], population_range[1]]
+              group_size_range[1]]  # , test_duration_range[1], tests_per_day_range[1], population_range[1]]
         self.lowerBounds = pysgpp.DataVector(lb[:dim])
         self.upperBounds = pysgpp.DataVector(ub[:dim])
 
@@ -98,15 +127,15 @@ class sgpp_simStorage():
             print(
                 f"saved them to {self.precalcValuesFileName}, which now contains {len(self.precalculatedValues)} entries")
 
-    def eval(self, x):
+    def eval(self, x, recalculate=False, evalType='multiMC', number_of_instances=1):
         # lists are not allowed as keys, but tuples are
         prob_sick = self.default_parameters[0]
         success_rate_test = self.default_parameters[1]
         false_positive_rate = self.default_parameters[2]
         group_size = self.default_parameters[3]
-        test_duration = self.default_parameters[4]
-        tests_per_day = self.default_parameters[5]
-        population = self.default_parameters[6]
+        # test_duration = self.default_parameters[4]
+        # tests_per_day = self.default_parameters[5]
+        # population = self.default_parameters[6]
         if self.dim > 0:
             prob_sick = x[0]
         if self.dim > 1:
@@ -114,50 +143,38 @@ class sgpp_simStorage():
         if self.dim > 2:
             false_positive_rate = x[2]
         if self.dim > 3:
-            group_size = int(np.ceil(x[3]))
-        if self.dim > 4:
-            test_duration = x[4]
-        if self.dim > 5:
-            tests_per_day = x[5]
-        if self.dim > 6:
-            population = x[6]
+            group_size = int(x[3])
+        # if self.dim > 4:
+        #     test_duration = x[4]
+        # if self.dim > 5:
+        #     tests_per_day = x[5]
+        # if self.dim > 6:
+        #     population = x[6]
 
-        # The reference population always consists of 100,000 individuals
-        # Given tests per day and population are combined into one variable
-        # num_simultaneous_tests
+        # The reference population always consists of 100,000 individuals and 1000 tests
+        # testing times can simply be scaled accordingly
         sample_size = 100000
-        tests_per_capita = tests_per_day/population*sample_size
-        num_simultaneous_tests = int(tests_per_capita/test_duration)
-        scale_factor_pop = population/sample_size
+        num_daily_tests = 1000
+        test_duration = 5
+        num_simultaneous_tests = int(num_daily_tests*test_duration/24.0)
 
         key = tuple([prob_sick, success_rate_test, false_positive_rate,
-                     group_size, test_duration, num_simultaneous_tests,
-                     self.number_of_instances])
-        if key in self.precalculatedValues:
+                     group_size, evalType, number_of_instances])
+        if key in self.precalculatedValues and recalculate == False:
+            #print(f'Using existing {key=}')
             [e_time, e_num_tests, e_num_confirmed_sick_individuals] = self.precalculatedValues[key]
         else:
-            # relict parameters. We won't touch these in the near future
-            tests_repetitions = 1
-            test_result_decision_strategy = 'max'
-
-            print(f'Calculating for {sample_size=}   {num_simultaneous_tests=}')
-            print(f'{key=}\n')
-            stat_test = Corona_Simulation_Statistics(sample_size, prob_sick, success_rate_test,
-                                                     false_positive_rate, self.test_strategy,
-                                                     num_simultaneous_tests, test_duration, group_size,
-                                                     tests_repetitions, test_result_decision_strategy)
-            start = time.time()
-            stat_test.statistical_analysis(self.number_of_instances)
-            runtime = time.time()-start
-            logging.info(f'runtime: {runtime}s\n')
-
-            e_time = stat_test.e_time*scale_factor_pop
-            e_num_tests = stat_test.e_number_of_tests*scale_factor_pop
-            e_num_confirmed_sick_individuals = stat_test.e_num_confirmed_sick_individuals*scale_factor_pop
+            print(f'Calculating {key=}')
+            scale_factor_pop = 1
+            e_time, e_num_tests, e_num_confirmed_sick_individuals = simulate(sample_size, prob_sick, success_rate_test, false_positive_rate,
+                                                                             test_duration, group_size, num_simultaneous_tests, number_of_instances,
+                                                                             scale_factor_pop, self.test_strategy, evalType)
             self.precalculatedValues[key] = [e_time, e_num_tests, e_num_confirmed_sick_individuals]
             self.numNew += 1
+            logging.info(f'so far {self.numNew} new evaluations')
+
         if self.qoi == 'time':
-            return 1  # e_time
+            return e_time
         elif self.qoi == 'numtests':
             return e_num_tests
         elif self.qoi == 'numconfirmed':
