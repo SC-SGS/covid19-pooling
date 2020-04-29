@@ -56,10 +56,9 @@ def simulate(sample_size, prob_sick, success_rate_test, false_positive_rate,
     start = time.time()
     if evalType == 'multiMC':
         logging.info(f'multi MC')
-        # TODO the num simultaneous tests must be non-constant for >1D
-        stat_test.multilevel_MonteCarlo([10000, 25000, 50000, 100000],
-                                        [num_simultaneous_tests]*4,
-                                        [16, 8, 4, 2])
+        stat_test.multilevel_MonteCarlo([10000, 25000, 100000],
+                                        [num_simultaneous_tests]*3,
+                                        [16, 8, 4])
     elif evalType == 'MC':
         logging.info(f'MC')
         stat_test.statistical_analysis(sample_size, num_simultaneous_tests, number_of_instances)
