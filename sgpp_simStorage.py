@@ -73,29 +73,13 @@ def simulate(sample_size, prob_sick, success_rate_test, false_positive_rate,
 
 
 class sgpp_simStorage():
-    def __init__(self, dim, test_strategy, qoi):
+    def __init__(self, dim, test_strategy, qoi, lb, ub):
         self.dim = dim
         self.test_strategy = test_strategy
         self.qoi = qoi
 
-        # set ranges for all 7 parameters
-        # tests_per_day and population are combined into one parameter, so effectively there are only 6 dimensions
-        # Note for myself: Never go to 7D when creating the response surface!
-        # the population parameter is always scaled, so it would increase runtimes without any gain.
-        prob_sick_range = [0.001, 0.3]
-        success_rate_test_range = [0.3, 0.99]
-        false_positive_rate_test_range = [0.01, 0.2]
-        group_size_range = [1, 32]
-        # test_duration_range = [0.1, 10]
-        # tests_per_day_range = [100, 1000000]
-        # population_range = [10000, 400000000]
-        # for dimensionality < 7 the remaining parameters get default values
         self.default_parameters = [0.1, 0.99, 0.01, 8, ]
 
-        lb = [prob_sick_range[0], success_rate_test_range[0], false_positive_rate_test_range[0],
-              group_size_range[0]]  # , test_duration_range[0], tests_per_day_range[0], population_range[0]]
-        ub = [prob_sick_range[1], success_rate_test_range[1], false_positive_rate_test_range[1],
-              group_size_range[1]]  # , test_duration_range[1], tests_per_day_range[1], population_range[1]]
         self.lowerBounds = pysgpp.DataVector(lb[:dim])
         self.upperBounds = pysgpp.DataVector(ub[:dim])
 

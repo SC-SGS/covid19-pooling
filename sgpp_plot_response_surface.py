@@ -24,7 +24,7 @@ print(f'precalculated response surface with {precalculatedReSurf.getSize()} poin
 # eval parameters:
 #probabilities_sick = np.linspace(0.001, 0.3, 21)
 probabilities_sick = [0.001, 0.0025, 0.005, 0.0075, 0.01, 0.025, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3]
-success_rate_test = 0.4
+success_rate_test = 0.84
 false_positive_rate = 0.01378
 group_size = 12
 
@@ -58,7 +58,7 @@ with open(precalcValuesFileName, "wb") as fp:
     pickle.dump(precalculatedValues, fp)
 
 # evaluations
-f = sgpp_simStorage(dim, test_strategy,  qoi)
+f = sgpp_simStorage(dim, test_strategy,  qoi, lb, ub)
 if qoi == 'ppt':
     sgpp_e_num_confirmed_per_test = np.zeros(len(probabilities_sick))
     ref_e_num_confirmed_per_test = np.zeros(len(probabilities_sick))

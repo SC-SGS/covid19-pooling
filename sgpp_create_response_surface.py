@@ -32,7 +32,7 @@ def getSetup():
     scale_factor_pop = 1
     number_of_instances = 1
     prob_sick_range = [0.001, 0.3]
-    success_rate_test_range = [0.3, 0.99]
+    success_rate_test_range = [0.5, 0.99]  # [0.3, 0.99]
     false_positive_rate_test_range = [0.01, 0.2]
     group_size_range = [1, 32]
     lb = np.array([prob_sick_range[0], success_rate_test_range[0],
@@ -49,7 +49,7 @@ if __name__ == "__main__":
     gridType, dim, degree, test_strategy, qoi, name, sample_size, num_daily_tests, \
         test_duration, num_simultaneous_tests, evalType, scale_factor_pop,\
         number_of_instances, lb, ub = getSetup()
-    f = sgpp_simStorage(dim, test_strategy,  qoi)
+    f = sgpp_simStorage(dim, test_strategy,  qoi, lb, ub)
 
     objFunc = objFuncSGpp(f)
 
@@ -76,7 +76,7 @@ if __name__ == "__main__":
 
         # measure error
         numMCPoints = 100
-        error_reference_data_file = f'precalc/values/mc{numMCPoints}_{dim}dim_{qoi}.pkl'
+        error_reference_data_file = f'precalc/values/mc{numMCPoints}_{test_strategy}_{dim}dim_{qoi}.pkl'
         with open(error_reference_data_file, 'rb') as fp:
             error_reference_data = pickle.load(fp)
         l2Error = 0
