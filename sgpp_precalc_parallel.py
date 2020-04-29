@@ -24,6 +24,7 @@ def precalc_parallel(points, sample_size, test_duration, num_simultaneous_tests,
     return_dict = manager.dict()
     jobs = []
     for i, point in enumerate(points):
+        #print(f'adding {point=} to queue')
         prob_sick = point[0]
         success_rate_test = point[1]
         false_positive_rate = point[2]
@@ -33,6 +34,7 @@ def precalc_parallel(points, sample_size, test_duration, num_simultaneous_tests,
                                                          scale_factor_pop, test_strategy, evalType))
         jobs.append(p)
         p.start()
+    print(f'set up list with {len(jobs)} jobs')
     for proc in jobs:
         proc.join()
 

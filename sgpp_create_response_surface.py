@@ -8,15 +8,19 @@ from sgpp_simStorage import sgpp_simStorage, objFuncSGpp
 
 
 def getSetup():
-    #logging.basicConfig(stream=sys.stderr, level=logging.INFO)
-    #logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+    # logging.basicConfig(stream=sys.stderr, level=logging.INFO)
+    # logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
     logging.basicConfig(stream=sys.stderr, level=logging.CRITICAL)
 
     gridType = 'nakBsplineBoundary'
     dim = 4
     degree = 3
-#    test_strategy = 'individual-testing'
-    test_strategy = 'binary-splitting'
+    #test_strategy = 'individual-testing'
+    # test_strategy = 'binary-splitting'
+    test_strategy = 'two-stage-testing'
+    # test_strategy = 'RBS
+    #test_strategy = 'purim'
+    #test_strategy = 'sobel'
     qoi = 'ppt'
     name = name = f'{test_strategy}_{qoi}_dim{dim}_deg{degree}'
 
@@ -41,7 +45,7 @@ def getSetup():
 
 
 if __name__ == "__main__":
-    saveReSurf = False
+    saveReSurf = True
     gridType, dim, degree, test_strategy, qoi, name, sample_size, num_daily_tests, \
         test_duration, num_simultaneous_tests, evalType, scale_factor_pop,\
         number_of_instances, lb, ub = getSetup()
@@ -49,9 +53,9 @@ if __name__ == "__main__":
 
     objFunc = objFuncSGpp(f)
 
-    for level in range(5):
+    for level in range(3):
         reSurf = pysgpp.SplineResponseSurface(
-            objFunc, pysgpp.DataVector(lb), pysgpp.DataVector(ub),
+            objFunc, pysgpp.DataVector(lb[:dim]), pysgpp.DataVector(ub[:dim]),
             pysgpp.Grid.stringToGridType(gridType), degree)
 
         logging.info('Begin creating response surface')
@@ -92,7 +96,7 @@ if __name__ == "__main__":
             group_size = key[3]
             point = pysgpp.DataVector([prob_sick, success_rate_test, false_positive_rate, group_size])
             reSurf_value = reSurf.eval(point)
-            #print(f'{key}    {true_value}    {reSurf_value}')
+            # print(f'{key}    {true_value}    {reSurf_value}')
             l2Error += (true_value-reSurf_value)**2
         l2Error = np.sqrt(l2Error)
         print(f"level {level} {reSurf.getSize()} grid points, l2 error: {l2Error}\n")
@@ -111,4 +115,4 @@ if __name__ == "__main__":
             dummyCoeff = np.array([coeffs[i] for i in range(coeffs.getSize())])
             np.savetxt(f'{path}//np_coeff_{name}.dat', dummyCoeff)
             logging.info('wrote response surface to /data')
-            #print(f'saved response surface as {path}/{name}')
+            # print(f'saved response surface as {path}/{name}')
