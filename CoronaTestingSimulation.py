@@ -15,7 +15,15 @@ class Corona_Simulation(object):
 
     # === Creating the object ===
 
-    def __init__(self, sample_size, prob_sick=0.1, success_rate_test=0.99, false_posivite_rate=0.1, tests_repetitions=1,
+    def __init__(self,
+                 sample_size,
+                 rawdata,
+                 sick_list,
+                 number_sick_people,
+                 prob_sick=0.1,
+                 success_rate_test=0.99,
+                 false_posivite_rate=0.1,
+                 tests_repetitions=1,
                  test_result_decision_strategy='max'):
         """ Create object for Corona testing simulation.
             Call:
@@ -34,6 +42,9 @@ class Corona_Simulation(object):
         """
 
         self.sample_size = sample_size
+        self.rawdata = rawdata
+        self.sick_list = sick_list
+        self.number_sick_people = number_sick_people
         self.prob_sick = prob_sick
 
         # Define the success rate of our test (i.e., the chance to recognize a positive case),
@@ -48,11 +59,6 @@ class Corona_Simulation(object):
         self.total_time = 0
 
         # initialize lists and counters
-        self.rawdata = []
-        self.sick_list = []
-        self.number_sick_people = 0
-        self.sick_list_indices = []
-
         self.number_of_rounds = 0
         self.number_of_tests = 0
         self.sick_individuals = []
@@ -62,37 +68,9 @@ class Corona_Simulation(object):
         self.number_false_positives = 0
         self.false_posivite_rate = 0
 
-    def generate_data(self):
-        """ Function to generate data. """
-
-        # Generate a sample of raw data: a list of sample_size instances, equally distributed between 0 and 1
-        for i in range(self.sample_size):
-            self.rawdata += [np.random.rand()]  # [ran.random()]
-
-        # Decide, who is infected
-        for i in range(self.sample_size):
-            if self.rawdata[i] <= self.prob_sick:
-                self.sick_list += [1]
-                self.sick_list_indices.append(i)
-                self.number_sick_people += 1
-            else:
-                self.sick_list += [0]
-        if self.number_sick_people == 0:
-            print(
-                'There would have been zero infected (probably sample_size is quite small). For Debugging purposes one infection has been added')
-            infected_individual_index = 0
-            self.rawdata[infected_individual_index] = 0
-            self.sick_list[infected_individual_index] = 1
-            self.sick_list_indices.append(infected_individual_index)
-            self.number_sick_people = 1
-        # print('generated data with {} sick people among total {}'.format(self.number_sick_people, self.sample_size))
-        # print('they are {}\n----\n'.format(self.sick_list_indices))
-
-        self.data = (self.rawdata, self.sick_list,
-                     self.number_sick_people, self.sick_list_indices)
-
     # auxiliary routine for binary_splitting_time_dependent
     # The 'data' is seen as a stack and to create groups entries are popped from this stack
+
     def get_next_group_from_data(self, group_size):
         if len(self.rawdata) == 0:
             return
@@ -492,7 +470,9 @@ class Corona_Simulation(object):
                 for i in range(self.num_simultaneous_tests-len(self.active_groups)):
                     self.get_next_group_from_data(group_size)
 
-            self.total_time += self.test_duration * self.tests_repetitions
+            #self.total_time += self.test_duration * self.tests_repetitions
+
+        self.total_time = self.number_of_tests*self.test_duration * self.tests_repetitions/self.num_simultaneous_tests
         self.update_sick_lists_and_success_rate()
 
     # Step 1: Test group. Step 2: If sample is positively tested, test all individuals
@@ -538,7 +518,9 @@ class Corona_Simulation(object):
                 # groups have been fully processed. Add next group from data
                 for i in range(self.num_simultaneous_tests-len(self.active_groups)):
                     self.get_next_group_from_data(group_size)
-            self.total_time += self.test_duration
+            #self.total_time += self.test_duration
+
+        self.total_time = self.number_of_tests*self.test_duration * self.tests_repetitions/self.num_simultaneous_tests
         self.update_sick_lists_and_success_rate()
 
     # parent function which performs binary splitting with respect to time and number
@@ -594,7 +576,9 @@ class Corona_Simulation(object):
                 for i in range(self.num_simultaneous_tests-len(self.active_groups)):
                     self.get_next_group_from_data(group_size)
 
-            self.total_time += self.test_duration * self.tests_repetitions
+            #self.total_time += self.test_duration * self.tests_repetitions
+
+        self.total_time = self.number_of_tests*self.test_duration * self.tests_repetitions/self.num_simultaneous_tests
         self.update_sick_lists_and_success_rate()
 
     def RBS_time_dependent(self, num_simultaneous_tests, test_duration, group_size):
