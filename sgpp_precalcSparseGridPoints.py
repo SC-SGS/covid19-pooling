@@ -23,7 +23,7 @@ except (FileNotFoundError):
     precalculatedValues = {}
 
 degree = 3
-level = 2
+level = 3
 grid = pysgpp.Grid_createNakBsplineBoundaryGrid(dim, degree)
 grid.getGenerator().regular(level)
 points = []

@@ -17,8 +17,8 @@ def getSetup():
     degree = 3
     #test_strategy = 'individual-testing'
     # test_strategy = 'binary-splitting'
-    test_strategy = 'two-stage-testing'
-    # test_strategy = 'RBS
+    #test_strategy = 'two-stage-testing'
+    test_strategy = 'RBS'
     #test_strategy = 'purim'
     #test_strategy = 'sobel'
     qoi = 'ppt'
@@ -53,7 +53,7 @@ if __name__ == "__main__":
 
     objFunc = objFuncSGpp(f)
 
-    for level in range(3):
+    for level in range(4):
         reSurf = pysgpp.SplineResponseSurface(
             objFunc, pysgpp.DataVector(lb[:dim]), pysgpp.DataVector(ub[:dim]),
             pysgpp.Grid.stringToGridType(gridType), degree)
