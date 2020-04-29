@@ -15,7 +15,7 @@ def worker(return_dict, sample_size, prob_sick, success_rate_test, false_positiv
     key = tuple([prob_sick, success_rate_test, false_positive_rate,
                  group_size, evalType, number_of_instances])
     return_dict[key] = [e_time, e_num_tests, e_num_confirmed_sick_individuals]
-    print(f'Calculated {key=}')
+    print(f'Calculated key={key}')
 
 
 def precalc_parallel(points, sample_size, test_duration, num_simultaneous_tests,
@@ -24,7 +24,6 @@ def precalc_parallel(points, sample_size, test_duration, num_simultaneous_tests,
     return_dict = manager.dict()
     jobs = []
     for i, point in enumerate(points):
-        #print(f'adding {point=} to queue')
         prob_sick = point[0]
         success_rate_test = point[1]
         false_positive_rate = point[2]

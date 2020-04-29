@@ -161,10 +161,9 @@ class sgpp_simStorage():
         key = tuple([prob_sick, success_rate_test, false_positive_rate,
                      group_size, evalType, number_of_instances])
         if key in self.precalculatedValues and recalculate == False:
-            #print(f'Using existing {key=}')
             [e_time, e_num_tests, e_num_confirmed_sick_individuals] = self.precalculatedValues[key]
         else:
-            print(f'Calculating {key=}')
+            print(f'Calculating key={key}')
             scale_factor_pop = 1
             e_time, e_num_tests, e_num_confirmed_sick_individuals = simulate(sample_size, prob_sick, success_rate_test, false_positive_rate,
                                                                              test_duration, group_size, num_simultaneous_tests, number_of_instances,
