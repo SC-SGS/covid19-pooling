@@ -105,7 +105,8 @@ class sgpp_simStorage():
     def cleanUp(self):
         with open(self.precalcValuesFileName, "wb") as f:
             pickle.dump(self.precalculatedValues, f)
-        print(f"\ncalculated {self.numNew} new evaluations")
+        if self.numNew > 0:
+            print(f"\ncalculated {self.numNew} new evaluations")
         if self.numNew > 0:
             print(
                 f"saved them to {self.precalcValuesFileName}, which now contains {len(self.precalculatedValues)} entries")

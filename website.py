@@ -10,13 +10,12 @@ import pickle
 calculate_comparison = True
 
 # WEBSITE INPUT
-input_prob_sick = 0.02
-input_success_rate_test = 0.95
-input_false_positive_rate = 0.017
-input_group_size = 18
-
-input_population = 10000
-input_daily_tests = 17
+input_prob_sick = 0.01
+input_success_rate_test = 0.99
+input_false_positive_rate = 0.01
+input_group_size = 32
+input_population = 32824000
+input_daily_tests = 146000
 
 probabilities_sick = [0.001, 0.0025, 0.005, 0.0075, 0.01, 0.025, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3]
 probabilities_sick.append(input_prob_sick)
@@ -38,7 +37,9 @@ test_strategies = [
 ]
 
 ppt = np.zeros((len(test_strategies), len(probabilities_sick)))
+scaled_e_times = np.zeros(len(test_strategies))
 ref_ppt = np.zeros((len(test_strategies), len(probabilities_sick)))
+ref_scaled_e_times = np.zeros(len(test_strategies))
 
 for i, test_strategy in enumerate(test_strategies):
     evaluationPoints = []
@@ -69,9 +70,7 @@ for i, test_strategy in enumerate(test_strategies):
             # I use 1000 daily tests, so in total i needed e_time*1000 tests
             # for M available tests instead of 1000 we'd need e_time*1000/M tests
             # for N population instead of 100,000 we'd need e_time*1000/M * N/100000 days
-            scaled_e_time = e_time*1000/input_daily_tests * input_population/100000
-            print(f'Using {test_strategy} would have taken  {scaled_e_time:.0f} days')
-            pass
+            scaled_e_times[i] = e_time*num_daily_tests/input_daily_tests * input_population/sample_size
     if calculate_comparison:
         # load precalculated data
         savePath = "/home/rehmemk/git/covid19-pooling/precalc/"
@@ -97,9 +96,12 @@ for i, test_strategy in enumerate(test_strategies):
             evaluationPoint = [prob_sick, input_success_rate_test, input_false_positive_rate, input_group_size]
             ref_ppt[i, j] = f.eval(evaluationPoint)
             if prob_sick == input_prob_sick:
-                e_time = f_time.eval(evaluationPoint)
-                scaled_e_time = e_time*1000/input_daily_tests * input_population/100000
-                print(f'Using {test_strategy} would have taken {scaled_e_time:.0f} days (REFERENCE)')
+                ref_e_time = f_time.eval(evaluationPoint)
+                ref_scaled_e_times[i] = ref_e_time*num_daily_tests/input_daily_tests * input_population/sample_size
+
+for i, test_strategy in enumerate(test_strategies):
+    print(f'Using {test_strategy} would have taken  {scaled_e_times[i]:.0f} days')
+    print(f'Using {test_strategy} would have taken {ref_scaled_e_times[i]:.0f} days (REFERENCE)')
 
 markers = ['o', '*', '^', '+', 's', 'd', 'v', '<', '>']
 colors = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9']

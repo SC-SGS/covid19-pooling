@@ -23,10 +23,10 @@ def getSetup():
     #test_strategy = 'purim'
     #test_strategy = 'sobel'
 
-    qoi = 'time'
+    #qoi = 'time'
     #qoi = 'numtests'
     #qoi = 'numconfirmed'
-    #qoi = 'ppt'
+    qoi = 'ppt'
 
     name = name = f'{test_strategy}_{qoi}_dim{dim}_deg{degree}'
 
@@ -34,9 +34,9 @@ def getSetup():
     num_daily_tests = 1000
     test_duration = 5
     num_simultaneous_tests = int(num_daily_tests*test_duration/24.0)
-    evalType = 'multiMC'
+    evalType = 'MC'
+    number_of_instances = 5
     scale_factor_pop = 1
-    number_of_instances = 1
     prob_sick_range = [0.001, 0.3]
     success_rate_test_range = [0.5, 0.99]  # [0.3, 0.99]
     false_positive_rate_test_range = [0.01, 0.2]
@@ -75,7 +75,7 @@ if __name__ == "__main__":
         f = sgpp_simStorage(dim, test_strategy, qoi, lb, ub)
         objFunc = objFuncSGpp(f)
 
-        for level in [5]:  # range(1):
+        for level in [6]:  # range(1):
             reSurf = pysgpp.SplineResponseSurface(
                 objFunc, pysgpp.DataVector(lb[:dim]), pysgpp.DataVector(ub[:dim]),
                 pysgpp.Grid.stringToGridType(gridType), degree, boundaryLevel)
