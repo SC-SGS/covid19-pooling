@@ -7,7 +7,7 @@ from Statistics import Corona_Simulation_Statistics
 
 def simulate(prob_sick, success_rate_test, false_positive_rate,
              group_size, test_strategy, reference_sample_size,
-             reference_num_simultaneous_tests, reference_number_of_instances):
+             reference_num_simultaneous_tests, reference_test_duration, reference_number_of_instances):
     '''
     perform one simulation on fixed reference population
     In ocntrast to the paper, the group size is fixed to the given value for all infection
@@ -20,13 +20,12 @@ def simulate(prob_sick, success_rate_test, false_positive_rate,
     test_strategy                       choice of pooling algorithm
     reference_sample_size               population size of the reference population  
     reference_num_simultaneous_tests    number of simultaneous tests of the reference population
+    reference_test_duration             duration of a test for the reference population
     reference_number_of_instances       number of repetitions of the simulation for stochastical values
     '''
-
-    test_duration = 5
     stat_test = Corona_Simulation_Statistics(prob_sick, success_rate_test,
                                              false_positive_rate, test_strategy,
-                                             test_duration, group_size)
+                                             reference_test_duration, group_size)
     start = time.time()
     stat_test.statistical_analysis(reference_sample_size, reference_num_simultaneous_tests,
                                    reference_number_of_instances)
@@ -46,7 +45,17 @@ def simulate(prob_sick, success_rate_test, false_positive_rate,
 def generateData(input_prob_sick, input_success_rate_test, input_false_positive_rate, input_group_size,
                  input_population, input_daily_tests):
     '''
-
+    generate the dataset which will be plotted on the website, given the input parameters
+    The input_population and inpu_daily_tests are NOT actually used.
+    Instead the simulation is performed on a reference population of meaningful size, which balances
+    runtime and stochastical neccessity
+    Parameters
+    input_prob_sick             the probability of sickness / infection rate
+    input_success_rate_test     sensitivity of the test
+    input_false_positive_rate   false positive rate of the test
+    input_group_size            group size
+    input_population            population size
+    input_daily_tests           number of daily tests
     '''
 
     # THESE PARAMETERS DETERMINE RUNTIME AND ACCURACY OF THE SIMULATION
@@ -81,6 +90,7 @@ def generateData(input_prob_sick, input_success_rate_test, input_false_positive_
                                                      input_false_positive_rate, input_group_size,
                                                      test_strategy, reference_sample_size,
                                                      reference_num_simultaneous_tests,
+                                                     reference_test_duration,
                                                      reference_number_of_instances)
             e_ppt[i, j] = e_num_confirmed_per_test
             sd_ppt[i, j] = sd_num_confirmed_per_test
@@ -114,9 +124,6 @@ def generateData(input_prob_sick, input_success_rate_test, input_false_positive_
 
 
 if __name__ == "__main__":
-    '''
-
-    '''
     # WEBSITE INPUT
     input_prob_sick = 0.02
     input_success_rate_test = 0.93
