@@ -16,7 +16,7 @@ class objFuncSGpp(pysgpp.ScalarFunction):
         super(objFuncSGpp, self).__init__(self.dim)
 
     def eval(self, x):
-        return self.objFunc.eval(x, recalculate=False, evalType='multiMC')
+        return self.objFunc.eval(x, recalculate=False, evalType='MC')
 
     def getDim(self):
         return self.dim
@@ -89,7 +89,7 @@ class sgpp_simStorage():
         try:
             with open(self.precalcValuesFileName, 'rb') as f:
                 self.precalculatedValues = pickle.load(f)
-            print(f'loaded precalculated evaluations from {self.precalcValuesFileName}')
+            #print(f'loaded precalculated evaluations from {self.precalcValuesFileName}')
         except (FileNotFoundError):
             print('could not find precalculated data at {}\nCreating new data file.'.format(
                 self.precalcValuesFileName))
@@ -111,7 +111,7 @@ class sgpp_simStorage():
             print(
                 f"saved them to {self.precalcValuesFileName}, which now contains {len(self.precalculatedValues)} entries")
 
-    def eval(self, x, recalculate=False, evalType='multiMC', number_of_instances=1):
+    def eval(self, x, recalculate=False, evalType='MC', number_of_instances=5):
         # lists are not allowed as keys, but tuples are
         prob_sick = self.default_parameters[0]
         success_rate_test = self.default_parameters[1]

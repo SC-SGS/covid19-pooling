@@ -10,10 +10,10 @@ import pickle
 calculate_comparison = True
 
 # WEBSITE INPUT
-input_prob_sick = 0.01
-input_success_rate_test = 0.99
-input_false_positive_rate = 0.01
-input_group_size = 32
+input_prob_sick = 0.02
+input_success_rate_test = 0.93
+input_false_positive_rate = 0.017
+input_group_size = 25
 input_population = 32824000
 input_daily_tests = 146000
 
@@ -26,7 +26,12 @@ gridType, dim, degree, _, _, _, sample_size, num_daily_tests, \
     test_duration, num_simultaneous_tests, evalType, scale_factor_pop,\
     number_of_instances, lb, ub, boundaryLevel = getSetup()
 qoi = 'ppt'
+
+#refineType = 'regular'
+refineType = 'adaptive'
 level = 5
+numPoints = 400  # max number of grid points for adaptively refined grid
+
 test_strategies = [
     'individual-testing',
     'two-stage-testing',
@@ -44,19 +49,31 @@ ref_scaled_e_times = np.zeros(len(test_strategies))
 for i, test_strategy in enumerate(test_strategies):
     evaluationPoints = []
     # load qoi reSurf
-    name = f'{test_strategy}_{qoi}_dim{dim}_deg{degree}'
-    dummyCoeff = np.loadtxt(f'precalc/reSurf/np_coeff_{name}_level{level}.dat')
+    if refineType == 'regular':
+        name = f'{test_strategy}_{qoi}_dim{dim}_deg{degree}_level{level}'
+    elif refineType == 'adaptive':
+        name = f'{test_strategy}_{qoi}_dim{dim}_deg{degree}_adaptive{numPoints}'
+
+    dummyCoeff = np.loadtxt(f'precalc/reSurf/np_coeff_{name}.dat')
     coefficients = pysgpp.DataVector(dummyCoeff)
-    grid = pysgpp.Grid.unserializeFromFile(f'precalc/reSurf/grid_{name}_level{level}.dat')
+    grid = pysgpp.Grid.unserializeFromFile(f'precalc/reSurf/grid_{name}.dat')
     precalculatedReSurf = pysgpp.SplineResponseSurface(
         grid, coefficients, pysgpp.DataVector(lb[:dim]), pysgpp.DataVector(ub[:dim]), degree)
     print(f'precalculated {test_strategy} response surface with {precalculatedReSurf.getSize()} points  has been loaded')
 
     # load time reSurf
-    name_time = name = f'{test_strategy}_time_dim{dim}_deg{degree}'
-    dummyCoeff_time = np.loadtxt(f'precalc/reSurf/np_coeff_{name_time}_level{level}.dat')
+
+    # TODO THIS IS ONLY FOR DEBUGGING
+    refineType = 'regular'
+
+    if refineType == 'regular':
+        name_time = f'{test_strategy}_time_dim{dim}_deg{degree}_level{level}'
+    elif refineType == 'adaptive':
+        name_time = f'{test_strategy}_time_dim{dim}_deg{degree}_adaptive{numPoints}'
+
+    dummyCoeff_time = np.loadtxt(f'precalc/reSurf/np_coeff_{name_time}.dat')
     coefficients_time = pysgpp.DataVector(dummyCoeff_time)
-    grid_time = pysgpp.Grid.unserializeFromFile(f'precalc/reSurf/grid_{name_time}_level{level}.dat')
+    grid_time = pysgpp.Grid.unserializeFromFile(f'precalc/reSurf/grid_{name_time}.dat')
     precalculatedReSurf_time = pysgpp.SplineResponseSurface(
         grid_time, coefficients_time, pysgpp.DataVector(lb[:dim]), pysgpp.DataVector(ub[:dim]), degree)
 
@@ -114,7 +131,7 @@ for i, test_strategy in enumerate(test_strategies):
              marker=markers[i], color=colors[i], linestyle=linestyles[i])
     if calculate_comparison:
         plt.plot(probabilities_sick, ref_ppt[i, :], label=None,
-                 marker=markers[i], color=colors[i], linestyle=linestyles[i], alpha=1)
+                 marker=markers[i], color=colors[i], linestyle=linestyles[i], alpha=0.5)
 
 
 plt.legend()

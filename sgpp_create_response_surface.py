@@ -16,9 +16,9 @@ def getSetup():
     dim = 4
     degree = 3
 
-    test_strategy = 'individual-testing'
+    #test_strategy = 'individual-testing'
     #test_strategy = 'binary-splitting'
-    #test_strategy = 'two-stage-testing'
+    test_strategy = 'two-stage-testing'
     #test_strategy = 'RBS'
     #test_strategy = 'purim'
     #test_strategy = 'sobel'
@@ -57,7 +57,15 @@ def getSetup():
 if __name__ == "__main__":
     saveReSurf = True
     calcError = True
-    numMCPoints = 100
+    numMCPoints = 1000
+
+    refineType = 'regular'
+    #refineType = 'adaptive'
+    level = 5
+    numPoints = 500  # max number of grid points
+    initialLevel = 1    # nitial level
+    numRefine = 10       # number of grid points refined in each step
+    verbose = False  # verbosity of subroutines
 
     gridType, dim, degree, _, qoi, _, sample_size, num_daily_tests, \
         test_duration, num_simultaneous_tests, evalType, scale_factor_pop,\
@@ -75,75 +83,76 @@ if __name__ == "__main__":
         f = sgpp_simStorage(dim, test_strategy, qoi, lb, ub)
         objFunc = objFuncSGpp(f)
 
-        for level in [6]:  # range(1):
-            reSurf = pysgpp.SplineResponseSurface(
-                objFunc, pysgpp.DataVector(lb[:dim]), pysgpp.DataVector(ub[:dim]),
-                pysgpp.Grid.stringToGridType(gridType), degree, boundaryLevel)
+        reSurf = pysgpp.SplineResponseSurface(
+            objFunc, pysgpp.DataVector(lb[:dim]), pysgpp.DataVector(ub[:dim]),
+            pysgpp.Grid.stringToGridType(gridType), degree, boundaryLevel)
 
-            logging.info('Begin creating response surface')
-            start = time.time()
-            # create surrogate with regular sparse grid
+        logging.info('Begin creating response surface')
+        start = time.time()
+        if refineType == 'regular':
             reSurf.regular(level)
+        elif refineType == 'adaptive':
+            reSurf.surplusAdaptive(numPoints, initialLevel, numRefine, verbose)
 
-            # create surrogate with spatially adaptive sparse grid
-            # numPoints = 400  # max number of grid points
-            # initialLevel = 1    # nitial level
-            # numRefine = 10       # number of grid points refined in each step
-            # verbose = False  # verbosity of subroutines
-            # reSurf.surplusAdaptive(numPoints, initialLevel, numRefine, verbose)
+        runtime = time.time()-start
+        logging.info('\nDone. Created response surface with {} grid points, took {}s'.format(reSurf.getSize(), runtime))
+        objFunc.cleanUp()
 
-            runtime = time.time()-start
-            logging.info('\nDone. Created response surface with {} grid points, took {}s'.format(reSurf.getSize(), runtime))
-            objFunc.cleanUp()
+        # measure error
+        if calcError:
+            error_reference_data_file = f'precalc/values/mc{numMCPoints}_{test_strategy}_{dim}dim.pkl'
+            with open(error_reference_data_file, 'rb') as fp:
+                error_reference_data = pickle.load(fp)
+            l2Error = 0
+            max_val = 0
+            min_val = 1e+14
+            for key in error_reference_data:
+                [true_e_time, true_e_num_tests, true_e_num_confirmed_sick_individuals] = error_reference_data[key]
+                if qoi == 'time':
+                    true_value = true_e_time
+                elif qoi == 'numtests':
+                    true_value = true_e_num_tests
+                elif qoi == 'numconfirmed':
+                    true_value = true_e_num_confirmed_sick_individuals
+                elif qoi == 'ppt':
+                    true_value = true_e_num_confirmed_sick_individuals/true_e_num_tests
 
-            # measure error
-            if calcError:
-                error_reference_data_file = f'precalc/values/mc{numMCPoints}_{test_strategy}_{dim}dim.pkl'
-                with open(error_reference_data_file, 'rb') as fp:
-                    error_reference_data = pickle.load(fp)
-                l2Error = 0
-                max_val = 0
-                min_val = 1e+14
-                for key in error_reference_data:
-                    [true_e_time, true_e_num_tests, true_e_num_confirmed_sick_individuals] = error_reference_data[key]
-                    if qoi == 'time':
-                        true_value = true_e_time
-                    elif qoi == 'numtests':
-                        true_value = true_e_num_tests
-                    elif qoi == 'numconfirmed':
-                        true_value = true_e_num_confirmed_sick_individuals
-                    elif qoi == 'ppt':
-                        true_value = true_e_num_confirmed_sick_individuals/true_e_num_tests
+                if true_value > max_val:
+                    max_val = true_value
+                if true_value < min_val:
+                    min_val = true_value
 
-                    if true_value > max_val:
-                        max_val = true_value
-                    if true_value < min_val:
-                        min_val = true_value
+                prob_sick = key[0]
+                success_rate_test = key[1]
+                false_positive_rate = key[2]
+                group_size = key[3]
+                point = pysgpp.DataVector([prob_sick, success_rate_test, false_positive_rate, group_size])
+                reSurf_value = reSurf.eval(point)
+                #print(f'{key}    {true_value}    {reSurf_value}     {np.abs(true_value-reSurf_value)}')
+                l2Error += (true_value-reSurf_value)**2
+            l2Error = np.sqrt(l2Error/numMCPoints)
+            nrmse = l2Error / (max_val-min_val)
+            if refineType == 'regular':
+                print(f"{test_strategy}, level {level} {reSurf.getSize()} grid points, l2 error: {l2Error:.5f}  nrmse: {nrmse:.5f}")
+            elif refineType == 'adaptive':
+                print(f"{test_strategy}, adaptive {reSurf.getSize()} grid points, l2 error: {l2Error:.5f}  nrmse: {nrmse:.5f}")
 
-                    prob_sick = key[0]
-                    success_rate_test = key[1]
-                    false_positive_rate = key[2]
-                    group_size = key[3]
-                    point = pysgpp.DataVector([prob_sick, success_rate_test, false_positive_rate, group_size])
-                    reSurf_value = reSurf.eval(point)
-                    #print(f'{key}    {true_value}    {reSurf_value}     {np.abs(true_value-reSurf_value)}')
-                    l2Error += (true_value-reSurf_value)**2
-                l2Error = np.sqrt(l2Error/numMCPoints)
-                nrmse = l2Error / (max_val-min_val)
-                print(f"{test_strategy}, level {level} {reSurf.getSize()} grid points, l2 error: {l2Error}  nrmse: {nrmse}\n")
-
-            if saveReSurf:
-                path = 'precalc/reSurf'
-                # serialize the resposne surface
-                # gridStr = reSurf.serializeGrid()
-                gridStr = reSurf.getGrid().serialize()
-                coeffs = reSurf.getCoefficients()
-                # save it to files
-                with open(f'{path}/grid_{name}_level{level}.dat', 'w+') as f:
-                    f.write(gridStr)
-                # coeffs.toFile('data/coeffs.dat')
-                # sgpp DataVector and DataMatrix from File are buggy
-                dummyCoeff = np.array([coeffs[i] for i in range(coeffs.getSize())])
-                np.savetxt(f'{path}//np_coeff_{name}_level{level}.dat', dummyCoeff)
-                logging.info('wrote response surface to /data')
-                # print(f'saved response surface as {path}/{name}')
+        if saveReSurf:
+            path = 'precalc/reSurf'
+            # serialize the resposne surface
+            # gridStr = reSurf.serializeGrid()
+            gridStr = reSurf.getGrid().serialize()
+            coeffs = reSurf.getCoefficients()
+            # save it to files
+            if refineType == 'regular':
+                reSurfName = f'{name}_level{level}'
+            elif refineType == 'adaptive':
+                reSurfName = f'{name}_adaptive{numPoints}'
+            with open(f'{path}/grid_{reSurfName}.dat', 'w+') as f:
+                f.write(gridStr)
+            # coeffs.toFile('data/coeffs.dat')
+            # sgpp DataVector and DataMatrix from File are buggy
+            dummyCoeff = np.array([coeffs[i] for i in range(coeffs.getSize())])
+            np.savetxt(f'{path}//np_coeff_{reSurfName}.dat', dummyCoeff)
+            logging.info('wrote response surface to /data')
+            #print(f'saved response surface as {path}/{reSurfName}')
