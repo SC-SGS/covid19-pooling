@@ -15,13 +15,19 @@ def getSetup():
     gridType = 'nakBsplineBoundary'
     dim = 4
     degree = 3
-    #test_strategy = 'individual-testing'
+
+    test_strategy = 'individual-testing'
     #test_strategy = 'binary-splitting'
     #test_strategy = 'two-stage-testing'
     #test_strategy = 'RBS'
     #test_strategy = 'purim'
-    test_strategy = 'sobel'
-    qoi = 'ppt'
+    #test_strategy = 'sobel'
+
+    qoi = 'time'
+    #qoi = 'numtests'
+    #qoi = 'numconfirmed'
+    #qoi = 'ppt'
+
     name = name = f'{test_strategy}_{qoi}_dim{dim}_deg{degree}'
 
     sample_size = 100000
@@ -66,8 +72,7 @@ if __name__ == "__main__":
     ]
     for i, test_strategy in enumerate(test_strategies):
         name = name = f'{test_strategy}_{qoi}_dim{dim}_deg{degree}'
-        f = sgpp_simStorage(dim, test_strategy,  qoi, lb, ub)
-
+        f = sgpp_simStorage(dim, test_strategy, qoi, lb, ub)
         objFunc = objFuncSGpp(f)
 
         for level in [5]:  # range(1):
@@ -93,10 +98,12 @@ if __name__ == "__main__":
 
             # measure error
             if calcError:
-                error_reference_data_file = f'precalc/values/mc{numMCPoints}_{test_strategy}_{dim}dim_{qoi}.pkl'
+                error_reference_data_file = f'precalc/values/mc{numMCPoints}_{test_strategy}_{dim}dim.pkl'
                 with open(error_reference_data_file, 'rb') as fp:
                     error_reference_data = pickle.load(fp)
                 l2Error = 0
+                max_val = 0
+                min_val = 1e+14
                 for key in error_reference_data:
                     [true_e_time, true_e_num_tests, true_e_num_confirmed_sick_individuals] = error_reference_data[key]
                     if qoi == 'time':
@@ -107,16 +114,23 @@ if __name__ == "__main__":
                         true_value = true_e_num_confirmed_sick_individuals
                     elif qoi == 'ppt':
                         true_value = true_e_num_confirmed_sick_individuals/true_e_num_tests
+
+                    if true_value > max_val:
+                        max_val = true_value
+                    if true_value < min_val:
+                        min_val = true_value
+
                     prob_sick = key[0]
                     success_rate_test = key[1]
                     false_positive_rate = key[2]
                     group_size = key[3]
                     point = pysgpp.DataVector([prob_sick, success_rate_test, false_positive_rate, group_size])
                     reSurf_value = reSurf.eval(point)
-                    # print(f'{key}    {true_value}    {reSurf_value}')
+                    #print(f'{key}    {true_value}    {reSurf_value}     {np.abs(true_value-reSurf_value)}')
                     l2Error += (true_value-reSurf_value)**2
-                l2Error = np.sqrt(l2Error)
-                print(f"{test_strategy}, level {level} {reSurf.getSize()} grid points, l2 error: {l2Error}\n")
+                l2Error = np.sqrt(l2Error/numMCPoints)
+                nrmse = l2Error / (max_val-min_val)
+                print(f"{test_strategy}, level {level} {reSurf.getSize()} grid points, l2 error: {l2Error}  nrmse: {nrmse}\n")
 
             if saveReSurf:
                 path = 'precalc/reSurf'
