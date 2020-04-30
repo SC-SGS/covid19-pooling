@@ -10,20 +10,20 @@ from argparse import ArgumentParser
 if __name__ == "__main__":
     parser = ArgumentParser(description='Get a program and run it with input')
     parser.add_argument('--test_strategy', default='RBS', type=str)
-    parser.add_argument('--level', default=3, type=str)
+    parser.add_argument('--level', default=6, type=int)
     args = parser.parse_args()
     test_strategy = args.test_strategy
     level = args.level
 
     gridType, dim, degree, _, qoi, name, sample_size, num_daily_tests, \
         test_duration, num_simultaneous_tests, evalType, scale_factor_pop,\
-        number_of_instances, lb, ub = getSetup()
+        number_of_instances, lb, ub, boundaryLevel = getSetup()
     # load precalculated data
     savePath = "/home/rehmemk/git/covid19-pooling/precalc/"
     precalcValuesFileName = savePath + f"precalc_values_{test_strategy}.pkl"
     try:
-        with open(precalcValuesFileName, 'rb') as f:
-            precalculatedValues = pickle.load(f)
+        with open(precalcValuesFileName, 'rb') as fp:
+            precalculatedValues = pickle.load(fp)
         print(f'loaded precalculated evaluations from {precalcValuesFileName}')
     except (FileNotFoundError):
         print('could not find precalculated data at {}\nCreating new data file.'.format(
@@ -31,7 +31,7 @@ if __name__ == "__main__":
         precalculatedValues = {}
 
     degree = 3
-    grid = pysgpp.Grid_createNakBsplineBoundaryGrid(dim, degree)
+    grid = pysgpp.Grid_createNakBsplineBoundaryGrid(dim, degree, boundaryLevel)
     grid.getGenerator().regular(level)
     points = []
     num_to_calculate = 0
@@ -51,11 +51,11 @@ if __name__ == "__main__":
             points.append(point)
             num_to_calculate += 1
     print(f' Grid of dim {dim}, level {level} has {grid.getSize()} points, {num_to_calculate} are not yet precalculated')
-
+    sys.exit()
     multiprocessing_dict = precalc_parallel(points, sample_size, test_duration, num_simultaneous_tests,
                                             number_of_instances, scale_factor_pop, test_strategy, evalType)
     for key in multiprocessing_dict:
         precalculatedValues[key] = multiprocessing_dict[key]
-    with open(precalcValuesFileName, "wb") as f:
-        pickle.dump(precalculatedValues, f)
+    with open(precalcValuesFileName, "wb") as fp:
+        pickle.dump(precalculatedValues, fp)
     print(f"\ncalculated {num_to_calculate} new evaluations")
