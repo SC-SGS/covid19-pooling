@@ -51,7 +51,6 @@ if __name__ == "__main__":
             points.append(point)
             num_to_calculate += 1
     print(f' Grid of dim {dim}, level {level} has {grid.getSize()} points, {num_to_calculate} are not yet precalculated')
-    sys.exit()
     multiprocessing_dict = precalc_parallel(points, sample_size, test_duration, num_simultaneous_tests,
                                             number_of_instances, scale_factor_pop, test_strategy, evalType)
     for key in multiprocessing_dict:
