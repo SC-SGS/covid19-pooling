@@ -65,7 +65,12 @@ for i, test_strategy in enumerate(test_strategies):
         ppt[i, j] = precalculatedReSurf.eval(pysgpp.DataVector(evaluationPoint))
         if prob_sick == input_prob_sick:
             e_time = precalculatedReSurf_time.eval(pysgpp.DataVector(evaluationPoint))
-            print(f'Using {test_strategy} would have taken  {e_time:.2f} days')
+            # scale it to given poipulation and number of daily tests
+            # I use 1000 daily tests, so in total i needed e_time*1000 tests
+            # for M available tests instead of 1000 we'd need e_time*1000/M tests
+            # for N population instead of 100,000 we'd need e_time*1000/M * N/100000 days
+            scaled_e_time = e_time*1000/input_daily_tests * input_population/100000
+            print(f'Using {test_strategy} would have taken  {scaled_e_time:.0f} days')
             pass
     if calculate_comparison:
         # load precalculated data
@@ -93,7 +98,8 @@ for i, test_strategy in enumerate(test_strategies):
             ref_ppt[i, j] = f.eval(evaluationPoint)
             if prob_sick == input_prob_sick:
                 e_time = f_time.eval(evaluationPoint)
-                print(f'Using {test_strategy} would have taken {e_time:.2f} days (REFERENCE)')
+                scaled_e_time = e_time*1000/input_daily_tests * input_population/100000
+                print(f'Using {test_strategy} would have taken {scaled_e_time:.0f} days (REFERENCE)')
 
 markers = ['o', '*', '^', '+', 's', 'd', 'v', '<', '>']
 colors = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9']
