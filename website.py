@@ -58,15 +58,19 @@ def generateData(input_prob_sick, input_success_rate_test, input_false_positive_
     input_daily_tests           number of daily tests
     '''
 
+    start = time.time()
+
     # THESE PARAMETERS DETERMINE RUNTIME AND ACCURACY OF THE SIMULATION
-    reference_sample_size = 50000
-    reference_num_daily_tests = 1000
+    reference_sample_size = 20000
+    reference_num_daily_tests = 100
     reference_number_of_instances = 5
+
+    # this is a dummy parameter
     reference_test_duration = 5
     reference_num_simultaneous_tests = int(reference_num_daily_tests*reference_test_duration/24.0)
 
-    # probabilities_sick = [0.001, 0.0025, 0.005, 0.0075, 0.01, 0.025, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3]
-    probabilities_sick = [0.001,  0.1]
+    probabilities_sick = [0.001, 0.0025, 0.005, 0.0075, 0.01, 0.025, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3]
+    # add user input infection rate
     probabilities_sick.append(input_prob_sick)
     probabilities_sick = sorted(set(probabilities_sick))
 
@@ -79,8 +83,8 @@ def generateData(input_prob_sick, input_success_rate_test, input_false_positive_
         'sobel'
     ]
 
-    e_ppt = np.zeros((len(test_strategies), len(probabilities_sick)))
-    sd_ppt = np.zeros((len(test_strategies), len(probabilities_sick)))
+    expected_values = np.zeros((len(test_strategies), len(probabilities_sick)))
+    standard_deviations = np.zeros((len(test_strategies), len(probabilities_sick)))
     expected_times = np.zeros(len(test_strategies))
 
     for i, test_strategy in enumerate(test_strategies):
@@ -92,18 +96,20 @@ def generateData(input_prob_sick, input_success_rate_test, input_false_positive_
                                                      reference_num_simultaneous_tests,
                                                      reference_test_duration,
                                                      reference_number_of_instances)
-            e_ppt[i, j] = e_num_confirmed_per_test
-            sd_ppt[i, j] = sd_num_confirmed_per_test
+            expected_values[i, j] = e_num_confirmed_per_test
+            standard_deviations[i, j] = sd_num_confirmed_per_test
 
             if prob_sick == input_prob_sick:
                 # scale it to given poipulation and number of daily tests
-                # I use 1000 daily tests, so in total i needed e_time*1000 tests
+                # I use 1000 daily tests, so in total I needed e_time*1000 tests
                 # for M available tests instead of 1000 we'd need e_time*1000/M tests
                 # for N population instead of 100,000 we'd need e_time*1000/M * N/100000 days
                 expected_times[i] = e_time*reference_num_daily_tests / \
                     input_daily_tests * input_population/reference_sample_size
+    runtime = time.time()-start
 
-    # THIS IS FOR DEBUGGING / TESTING THE WEBSITE SIMULATION
+    ### THIS IS FOR DEBUGGING / TESTING THE WEBSITE SIMULATION ###
+    print(f'The complete data generation took {runtime}s\n')
     for i, test_strategy in enumerate(test_strategies):
         print(f'Using {test_strategy} would have taken  {expected_times[i]:.2f} days')
     markers = ['o', '*', '^', '+', 's', 'd', 'v', '<', '>']
@@ -113,12 +119,14 @@ def generateData(input_prob_sick, input_success_rate_test, input_false_positive_
               'Binary splitting', 'Recursive binary splitting', 'Purim', 'Sobel-R1']
     plt.figure()
     for i, test_strategy in enumerate(test_strategies):
-        plt.plot(probabilities_sick, e_ppt[i, :], label=labels[i],
+        plt.plot(probabilities_sick, expected_values[i, :], label=labels[i],
                  marker=markers[i], color=colors[i], linestyle=linestyles[i])
-        plt.errorbar(probabilities_sick, e_ppt[i, :],
-                     yerr=sd_ppt[i, :], ecolor='k', linestyle='None', capsize=5)
+        plt.errorbar(probabilities_sick, expected_values[i, :],
+                     yerr=standard_deviations[i, :], ecolor='k', linestyle='None', capsize=5)
+    plt.title(f'runtime: {runtime:.2f}s')
     plt.legend()
     plt.show()
+    ################################################################
 
     return probabilities_sick, expected_values, standard_deviations, expected_times
 
