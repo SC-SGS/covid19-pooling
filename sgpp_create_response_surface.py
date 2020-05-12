@@ -28,15 +28,16 @@ def getSetup():
     #qoi = 'numconfirmed'
     qoi = 'ppt'
 
-    name = name = f'{test_strategy}_{qoi}_dim{dim}_deg{degree}'
+    name = f'{test_strategy}_{qoi}_dim{dim}_deg{degree}'
 
+    # reference values. These are defined in sgpp_simStorage::init too.
+    # TODO: That's dangerous. Define them only once!
     sample_size = 100000
     num_daily_tests = 1000
     test_duration = 5
     num_simultaneous_tests = int(num_daily_tests*test_duration/24.0)
-    evalType = 'MC'
     number_of_instances = 5
-    scale_factor_pop = 1
+
     prob_sick_range = [0.001, 0.3]
     success_rate_test_range = [0.5, 0.99]  # [0.3, 0.99]
     false_positive_rate_test_range = [0.01, 0.2]
@@ -50,19 +51,18 @@ def getSetup():
     boundaryLevel = 2
 
     return gridType, dim, degree, test_strategy, qoi, name, sample_size, num_daily_tests,\
-        test_duration, num_simultaneous_tests, evalType, scale_factor_pop,\
-        number_of_instances, lb, ub, boundaryLevel
+        test_duration, num_simultaneous_tests, number_of_instances, lb, ub, boundaryLevel
 
 
 if __name__ == "__main__":
-    saveReSurf = True
-    calcError = True
+    saveReSurf = False
+    calcError = False
     numMCPoints = 1000
 
-    refineType = 'regular'
-    #refineType = 'adaptive'
+    #refineType = 'regular'
+    refineType = 'adaptive'
     level = 5
-    numPoints = 500  # max number of grid points
+    numPoints = 400  # max number of grid points
     initialLevel = 1    # nitial level
     numRefine = 10       # number of grid points refined in each step
     verbose = False  # verbosity of subroutines
