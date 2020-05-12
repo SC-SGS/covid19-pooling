@@ -1,5 +1,6 @@
 import multiprocessing
 import pickle
+import logging
 from sgpp_simStorage import simulate, generateKey
 
 
@@ -54,7 +55,11 @@ def calculate_missing_values(evaluationPoints, sample_size, test_duration, num_s
 
     todoPoints = []
     for point in evaluationPoints:
-        key = tuple([point[0], point[1], point[2], point[3], number_of_instances])
+        prob_sick = point[0]
+        success_rate_test = point[1]
+        false_positive_rate = point[2]
+        group_size = int(point[3])
+        key = generateKey(prob_sick, success_rate_test, false_positive_rate, group_size, number_of_instances)
         if key not in precalculatedValues:
             todoPoints.append(point)
 
@@ -62,6 +67,7 @@ def calculate_missing_values(evaluationPoints, sample_size, test_duration, num_s
     multiprocessing_dict = precalc_parallel(todoPoints, sample_size, test_duration, num_simultaneous_tests,
                                             number_of_instances, test_strategy)
     for key in multiprocessing_dict:
+        print(f'DID {key=}')
         precalculatedValues[key] = multiprocessing_dict[key]
     with open(precalcValuesFileName, "wb") as fp:
         pickle.dump(precalculatedValues, fp)
