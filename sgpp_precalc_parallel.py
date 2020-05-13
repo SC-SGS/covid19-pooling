@@ -67,7 +67,6 @@ def calculate_missing_values(evaluationPoints, sample_size, test_duration, num_s
     multiprocessing_dict = precalc_parallel(todoPoints, sample_size, test_duration, num_simultaneous_tests,
                                             number_of_instances, test_strategy)
     for key in multiprocessing_dict:
-        print(f'DID {key=}')
         precalculatedValues[key] = multiprocessing_dict[key]
     with open(precalcValuesFileName, "wb") as fp:
         pickle.dump(precalculatedValues, fp)

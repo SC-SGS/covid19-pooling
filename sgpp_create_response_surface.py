@@ -57,7 +57,7 @@ def getSetup():
 if __name__ == "__main__":
     saveReSurf = False
     calcError = False
-    numMCPoints = 1000
+    numMCPoints = 100
 
     refineType = 'regular'
     #refineType = 'adaptive'
