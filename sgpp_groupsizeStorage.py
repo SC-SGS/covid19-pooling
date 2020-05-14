@@ -10,7 +10,7 @@ def generateGroupSizeKey(test_strategy, prob_sick, success_rate_test, false_posi
     return tuple([test_strategy, prob_sick, success_rate_test, false_positive_rate])
 
 
-def calculateOptimalGroupSize(test_strategy, prob_sick, success_rate_test, false_positive_rate):
+def calculateOptimalGroupSize(test_strategy, probabilities_sick, success_rate_test, false_positive_rate):
     sample_size = 50000
     num_simultaneous_tests = 100
     number_of_instances = 10
@@ -22,18 +22,21 @@ def calculateOptimalGroupSize(test_strategy, prob_sick, success_rate_test, false
     f = sgpp_simStorage(4, test_strategy,  lb, ub)
 
     evaluationPoints = []
-    for j, group_size in enumerate(group_sizes):
-        evaluationPoint = [prob_sick, success_rate_test, false_positive_rate, group_size]
-        evaluationPoints.append(evaluationPoint)
+    for j, prob_sick in probabilities_sick:
+        for k, group_size in enumerate(group_sizes):
+            evaluationPoint = [prob_sick, success_rate_test, false_positive_rate, group_size]
+            evaluationPoints.append(evaluationPoint)
     calculate_missing_values(evaluationPoints, sample_size, test_duration, num_simultaneous_tests,
                              number_of_instances, test_strategy)
 
-    e_times = np.zeros(len(group_sizes))
-    for j, group_size in enumerate(group_sizes):
-        e_times[j] = f.eval(evaluationPoint, 'time')
-    optimal_group_size = group_sizes[np.argmin(e_times)]
+    e_times = np.zeros((len(group_sizes), len(probabilities_sick)))
+    optimal_group_sizes = np.zeros(len(probabilities_sick))
+    for j, prob_sick in probabilities_sick:
+        for k, group_size in enumerate(group_sizes):
+            e_times[j, k] = f.eval(evaluationPoint, 'time')
+        optimal_group_sizes[j] = group_sizes[np.argmin(e_times[j, :])]
 
-    return optimal_group_size
+    return optimal_group_sizes
 
 
 class optimalGroupSizeStorage():
@@ -59,12 +62,24 @@ class optimalGroupSizeStorage():
             print(
                 f"saved them to {self.precalcValuesFileName}, which now contains {len(self.precalculatedValues)} optimal group sizes")
 
+    # TODO
+    # When done, getOptimalGroupSize simply calls this
+    # def getOptimalGroupSizes(self, test_strategy, probabilities_sick, success_rate_test, false_positive_rate):
+    #     key = generateGroupSizeKey(test_strategy, prob_sick, success_rate_test, false_positive_rate)
+    #     if key not in self.precalculatedValues:
+    #         print(f'Calculating group sizes for key={key}')
+    #         self.precalculatedValues[key] = calculateOptimalGroupSize(
+    #             test_strategy, prob_sick, success_rate_test, false_positive_rate)
+    #         self.numNew += 1
+    #         logging.info(f'so far {self.numNew} new optimal group sizes')
+    #     return self.precalculatedValues[key]
+
     def getOptimalGroupSize(self, test_strategy, prob_sick, success_rate_test, false_positive_rate):
         key = generateGroupSizeKey(test_strategy, prob_sick, success_rate_test, false_positive_rate)
         if key not in self.precalculatedValues:
             print(f'Calculating group sizes for key={key}')
             self.precalculatedValues[key] = calculateOptimalGroupSize(
-                test_strategy, prob_sick, success_rate_test, false_positive_rate)
+                test_strategy, [prob_sick], success_rate_test, false_positive_rate)
             self.numNew += 1
             logging.info(f'so far {self.numNew} new optimal group sizes')
-        return self.precalculatedValues[key]
+        return self.precalculatedValues[key][0]

@@ -9,13 +9,14 @@ from Statistics import Corona_Simulation_Statistics
 
 
 class objFuncSGpp(pysgpp.ScalarFunction):
-    def __init__(self, objFunc):
+    def __init__(self, objFunc, qoi):
         self.dim = objFunc.getDim()
         self.objFunc = objFunc
+        self.qoi = qoi
         super(objFuncSGpp, self).__init__(self.dim)
 
     def eval(self, x):
-        return self.objFunc.eval(x, recalculate=False)
+        return self.objFunc.eval(x, self.qoi, recalculate=False)
 
     def getDim(self):
         return self.dim
@@ -78,10 +79,10 @@ def simulate(sample_size, prob_sick, success_rate_test, false_positive_rate, tes
 
 
 class sgpp_simStorage():
-    def __init__(self, dim, test_strategy, qoi, lb, ub):
+    def __init__(self, dim, test_strategy, lb, ub, number_of_instances):
         self.dim = dim
         self.test_strategy = test_strategy
-        self.qoi = qoi
+        self.number_of_instances = number_of_instances
 
         # The reference population always consists of 100,000 individuals and 1000 tests
         # testing times can simply be scaled accordingly
@@ -122,7 +123,7 @@ class sgpp_simStorage():
             print(
                 f"saved them to {self.precalcValuesFileName}, which now contains {len(self.precalculatedValues)} entries")
 
-    def eval(self, x, recalculate=False,  number_of_instances=5):
+    def eval(self, x, qoi, recalculate=False):
         # lists are not allowed as keys, but tuples are
         prob_sick = self.default_parameters[0]
         success_rate_test = self.default_parameters[1]
@@ -137,12 +138,12 @@ class sgpp_simStorage():
         if self.dim > 3:
             group_size = int(x[3])
 
-        key = generateKey(prob_sick, success_rate_test, false_positive_rate, group_size, number_of_instances)
+        key = generateKey(prob_sick, success_rate_test, false_positive_rate, group_size, self.number_of_instances)
         if key not in self.precalculatedValues or recalculate == True:
             print(f'Calculating key={key}')
             self.precalculatedValues[key] = simulate(self.reference_sample_size, prob_sick, success_rate_test,
                                                      false_positive_rate, self.reference_test_duration, group_size,
-                                                     self.reference_num_simultaneous_tests, number_of_instances,
+                                                     self.reference_num_simultaneous_tests, self.number_of_instances,
                                                      self.test_strategy)
             self.numNew += 1
             logging.info(f'so far {self.numNew} new evaluations')
@@ -151,25 +152,25 @@ class sgpp_simStorage():
             e_num_sent_to_quarantine, sd_time, sd_num_tests, sd_num_confirmed_sick_individuals,
             sd_num_confirmed_per_test, sd_num_sent_to_quarantine] = self.precalculatedValues[key]
 
-        if self.qoi == 'time':
+        if qoi == 'time':
             return e_time
-        elif self.qoi == 'numtests':
+        elif qoi == 'numtests':
             return e_num_tests
-        elif self.qoi == 'numconfirmed':
+        elif qoi == 'numconfirmed':
             return e_num_confirmed_sick_individuals
-        elif self.qoi == 'ppt':
+        elif qoi == 'ppt':
             return e_num_confirmed_per_test
-        elif self.qoi == 'quarantined':
+        elif qoi == 'quarantined':
             return e_num_sent_to_quarantine
-        elif self.qoi == 'sd-time':
+        elif qoi == 'sd-time':
             return sd_time
-        elif self.qoi == 'sd-numtests':
+        elif qoi == 'sd-numtests':
             return sd_num_tests
-        elif self.qoi == 'sd-numconfirmed':
+        elif qoi == 'sd-numconfirmed':
             return sd_num_confirmed_sick_individuals
-        elif self.qoi == 'sd-ppt':
+        elif qoi == 'sd-ppt':
             return sd_num_confirmed_per_test
-        elif self.qoi == 'sd-quarantined':
+        elif qoi == 'sd-quarantined':
             return sd_num_sent_to_quarantine
         else:
             warnings.warn('unknown qoi')
