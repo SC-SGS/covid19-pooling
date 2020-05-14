@@ -163,16 +163,37 @@ def calculate_error(reSurf, qoi, numMCPoints, test_strategy, dim, number_of_inst
     return l2error, nrmse
 
 
+def auxiliary(refineType, test_strategies, qois, dim, degree, lb, ub, level=1, numPoints=1,
+              initialLevel=1, numRefine=1, verbose=False):
+    l2errors = np.zeros((len(test_strategies), len(qois)))
+    nrmses = np.zeros((len(test_strategies), len(qois)))
+    gridSizes = np.zeros((len(test_strategies), len(qois)))
+    for i, test_strategy in enumerate(test_strategies):
+        for j, qoi in enumerate(qois):
+            name = f'{test_strategy}_{qoi}_dim{dim}_deg{degree}'
+            f = sgpp_simStorage(dim, test_strategy, lb, ub, number_of_instances)
+            objFunc = objFuncSGpp(f, qoi)
+            reSurf = create_reSurf(objFunc, lb, ub, gridType, degree, boundaryLevel, refineType,
+                                   level, numPoints, initialLevel, numRefine, verbose)
+
+            if calcError:
+                l2errors[i, j], nrmses[i, j] = calculate_error(
+                    reSurf, qoi, numMCPoints, test_strategy, dim, number_of_instances)
+                gridSizes[i, j] = reSurf.getSize()
+            if saveReSurf:
+                save_reSurf(reSurf, refineType)
+    return l2errors, nrmses, gridSizes
+
+
 if __name__ == "__main__":
     saveReSurf = False
     calcError = True
     plotError = True
     numMCPoints = 100
 
-    refineType = 'regular'
-    # refineType = 'adaptive'
-    levels = [1, 2, 3]
-    numPoints = 400  # max number of grid points
+    levels = [1, 2, 3, 4]
+    numPointsArray = [10, 100, 200]
+
     initialLevel = 1    # initial level
     numRefine = 10       # number of grid points refined in each step
     verbose = False  # verbosity of subroutines
@@ -190,54 +211,65 @@ if __name__ == "__main__":
     ]
     qois = [
         'ppt',
-        'sd-ppt',
+        # 'sd-ppt',
         'time',
-        'sd-time'
+        # 'sd-time'
     ]
 
-    l2errors = np.zeros((len(test_strategies), len(qois), len(levels)))
-    nrmses = np.zeros((len(test_strategies), len(qois), len(levels)))
+    regular_l2errors = np.zeros((len(test_strategies), len(qois), len(levels)))
+    regular_nrmses = np.zeros((len(test_strategies), len(qois), len(levels)))
+    regular_gridSizes = np.zeros((len(test_strategies), len(qois), len(levels)))
+
+    adaptive_l2errors = np.zeros((len(test_strategies), len(qois), len(numPointsArray)))
+    adaptive_nrmses = np.zeros((len(test_strategies), len(qois), len(numPointsArray)))
+    adaptive_gridSizes = np.zeros((len(test_strategies), len(qois), len(numPointsArray)))
+
+    refineType = 'regular'
+    print('regular')
     for l, level in enumerate(levels):
-        print('\n')
-        for i, test_strategy in enumerate(test_strategies):
-            for j, qoi in enumerate(qois):
-                name = f'{test_strategy}_{qoi}_dim{dim}_deg{degree}'
-                f = sgpp_simStorage(dim, test_strategy, lb, ub, number_of_instances)
-                objFunc = objFuncSGpp(f, qoi)
+        print(f'level {level}')
+        regular_l2errors[:, :, l], regular_nrmses[:, :, l], regular_gridSizes[:, :, l] = \
+            auxiliary(refineType, test_strategies, qois, dim, degree, lb, ub, level)
 
-                reSurf = create_reSurf(objFunc, lb, ub, gridType, degree, boundaryLevel, refineType,
-                                       level, numPoints, initialLevel, numRefine, verbose)
-
-                # measure error
-                if calcError:
-                    l2errors[i, j, l], nrmses[i, j, l] = calculate_error(
-                        reSurf, qoi, numMCPoints, test_strategy, dim, number_of_instances)
-                    if refineType == 'regular':
-                        print(
-                            f'{test_strategy:20s}, {qoi:10s} level {level}, {reSurf.getSize()}'
-                            f' grid points, l2 error: {l2errors[i,j,l]:.5f}  nrmse: {nrmses[i,j,l]:.5f}')
-                    elif refineType == 'adaptive':
-                        print(
-                            f'{test_strategy:20s}, {qoi:10s} adaptive {reSurf.getSize()} grid'
-                            f' points, l2 error: {l2errors[i,j,l]:.5f}  nrmse: {nrmses[i,j,l]:.5f}')
-
-                # save reSurf
-                if saveReSurf:
-                    save_reSurf(reSurf, refineType)
+    refineType = 'adaptive'
+    print('adaptive')
+    for l, numPoints in enumerate(numPointsArray):
+        print(f'num Points {numPoints}')
+        adaptive_l2errors[:, :, l], adaptive_nrmses[:, :, l], adaptive_gridSizes[:, :, l]\
+            = auxiliary(refineType, test_strategies, qois, dim, degree, lb, ub, level, numPoints,
+                        initialLevel, numRefine, verbose)
 
     if calcError and plotError:
         markers = ['o', '*', '^', '+', 's', 'd', 'v', '<', '>']
         colors = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9']
+
         plt.figure(figsize=(12, 8))
+        plt.title('regular')
         plotindex = 1
         for j, qoi in enumerate(qois):
             plt.subplot(2, 2, plotindex)
             plotindex += 1
             for i, test_strategy in enumerate(test_strategies):
-                plt.plot(levels, nrmses[i, j, :], label=test_strategy, marker=markers[i], color=colors[i])
+                plt.plot(regular_gridSizes[i, j, :], regular_nrmses[i, j, :],
+                         label=test_strategy, marker=markers[i], color=colors[i])
                 plt.legend()
             plt.title(qoi)
-            plt.xticks(levels)
-            plt.xlabel('level')
+            plt.xlabel('num regular grid points')
             plt.ylabel('NRMSE')
+            plt.gca().set_yscale('log')
+
+        plt.figure(figsize=(12, 8))
+        plt.title('adaptive')
+        plotindex = 1
+        for j, qoi in enumerate(qois):
+            plt.subplot(2, 2, plotindex)
+            plotindex += 1
+            for i, test_strategy in enumerate(test_strategies):
+                plt.plot(adaptive_gridSizes[i, j, :], adaptive_nrmses[i, j, :],
+                         label=test_strategy, marker=markers[i], color=colors[i])
+                plt.legend()
+            plt.title(qoi)
+            plt.xlabel('num adaptive grid points')
+            plt.ylabel('NRMSE')
+            plt.gca().set_yscale('log')
         plt.show()
