@@ -20,11 +20,12 @@ gridType, dim, degree, _, qoi, name, sample_size, num_daily_tests, \
     test_duration, num_simultaneous_tests,    number_of_instances, lb, ub,\
     boundaryLevel = getSetup()
 qoi = 'time'
-refineType = 'regular'
+#refineType = 'regular'
+refineType = 'adaptive'
 level = 3
-numPoints = 400  # max number of grid points for adaptively refined grid
+numPoints = 600  # max number of grid points for adaptively refined grid
 
-numMCPoints = 2
+numMCPoints = 20
 ref_e_times = {}
 reSurf_e_times = {}
 

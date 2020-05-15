@@ -55,6 +55,14 @@ def getSetup():
         test_duration, num_simultaneous_tests, number_of_instances, lb, ub, boundaryLevel
 
 
+def getName(refineType, test_strategy, qoi, dim, degree, level, numPoints):
+    if refineType == 'regular':
+        name = f'{test_strategy}_{qoi}_dim{dim}_deg{degree}_level{level}'
+    elif refineType == 'adaptive':
+        name = f'{test_strategy}_{qoi}_dim{dim}_deg{degree}_adaptive{numPoints}'
+    return name
+
+
 def create_reSurf(objFunc, lb, ub, gridType, degree, boundaryLevel, refineType, level, numPoints,
                   initialLevel, numRefine, verbose):
     reSurf = pysgpp.SplineResponseSurface(objFunc, pysgpp.DataVector(lb[:dim]),
@@ -71,31 +79,25 @@ def create_reSurf(objFunc, lb, ub, gridType, degree, boundaryLevel, refineType, 
     return reSurf
 
 
-def save_reSurf(reSurf, refineType):
+def save_reSurf(reSurf, refineType, test_strategy, qoi, dim, degree, level, numPoints):
+    reSurfName = getName(refineType, test_strategy, qoi, dim, degree, level, numPoints)
     path = 'precalc/reSurf'
     # serialize the resposne surface
     # gridStr = reSurf.serializeGrid()
     gridStr = reSurf.getGrid().serialize()
     coeffs = reSurf.getCoefficients()
     # save it to files
-    if refineType == 'regular':
-        reSurfName = f'{name}_level{level}'
-    elif refineType == 'adaptive':
-        reSurfName = f'{name}_adaptive{numPoints}'
     with open(f'{path}/grid_{reSurfName}.dat', 'w+') as f:
         f.write(gridStr)
     # coeffs.toFile('data/coeffs.dat')
     # sgpp DataVector and DataMatrix from File are buggy
     dummyCoeff = np.array([coeffs[i] for i in range(coeffs.getSize())])
-    np.savetxt(f'{path}//np_coeff_{reSurfName}.dat', dummyCoeff)
+    np.savetxt(f'{path}/np_coeff_{reSurfName}.dat', dummyCoeff)
     print(f'saved response surface as {path}/{reSurfName}')
 
 
 def load_response_Surface(refineType, test_strategy, qoi, dim, degree, level, numPoints, lb, ub):
-    if refineType == 'regular':
-        name = f'{test_strategy}_{qoi}_dim{dim}_deg{degree}_level{level}'
-    elif refineType == 'adaptive':
-        name = f'{test_strategy}_{qoi}_dim{dim}_deg{degree}_adaptive{numPoints}'
+    name = getName(refineType, test_strategy, qoi, dim, degree, level, numPoints)
 
     dummyCoeff = np.loadtxt(f'precalc/reSurf/np_coeff_{name}.dat')
     coefficients = pysgpp.DataVector(dummyCoeff)
@@ -170,7 +172,6 @@ def auxiliary(refineType, test_strategies, qois, dim, degree, lb, ub, level=1, n
     gridSizes = np.zeros((len(test_strategies), len(qois)))
     for i, test_strategy in enumerate(test_strategies):
         for j, qoi in enumerate(qois):
-            name = f'{test_strategy}_{qoi}_dim{dim}_deg{degree}'
             f = sgpp_simStorage(dim, test_strategy, lb, ub, number_of_instances)
             objFunc = objFuncSGpp(f, qoi)
             reSurf = create_reSurf(objFunc, lb, ub, gridType, degree, boundaryLevel, refineType,
@@ -181,18 +182,18 @@ def auxiliary(refineType, test_strategies, qois, dim, degree, lb, ub, level=1, n
                     reSurf, qoi, numMCPoints, test_strategy, dim, number_of_instances)
                 gridSizes[i, j] = reSurf.getSize()
             if saveReSurf:
-                save_reSurf(reSurf, refineType)
+                save_reSurf(reSurf, refineType, test_strategy, qoi, dim, degree, level, numPoints)
     return l2errors, nrmses, gridSizes
 
 
 if __name__ == "__main__":
-    saveReSurf = False
+    saveReSurf = True
     calcError = True
     plotError = True
     numMCPoints = 100
 
-    levels = [1, 2, 3, 4]
-    numPointsArray = [10, 100, 200]
+    levels = [1]  # [1, 2, 3, 4]
+    numPointsArray = [600]  # [10, 100, 200, 400, 600]  # , 800]
 
     initialLevel = 1    # initial level
     numRefine = 10       # number of grid points refined in each step
@@ -250,12 +251,15 @@ if __name__ == "__main__":
             plt.subplot(2, 2, plotindex)
             plotindex += 1
             for i, test_strategy in enumerate(test_strategies):
+                # plt.plot(regular_gridSizes[i, j, :], regular_l2errors[i, j, :],
+                #          label=test_strategy, marker=markers[i], color=colors[i])
                 plt.plot(regular_gridSizes[i, j, :], regular_nrmses[i, j, :],
                          label=test_strategy, marker=markers[i], color=colors[i])
                 plt.legend()
             plt.title(qoi)
             plt.xlabel('num regular grid points')
             plt.ylabel('NRMSE')
+            #plt.ylabel('L2 error')
             plt.gca().set_yscale('log')
 
         plt.figure(figsize=(12, 8))
@@ -265,11 +269,14 @@ if __name__ == "__main__":
             plt.subplot(2, 2, plotindex)
             plotindex += 1
             for i, test_strategy in enumerate(test_strategies):
+                # plt.plot(adaptive_gridSizes[i, j, :], adaptive_l2errors[i, j, :],
+                #          label=test_strategy, marker=markers[i], color=colors[i])
                 plt.plot(adaptive_gridSizes[i, j, :], adaptive_nrmses[i, j, :],
                          label=test_strategy, marker=markers[i], color=colors[i])
                 plt.legend()
             plt.title(qoi)
             plt.xlabel('num adaptive grid points')
             plt.ylabel('NRMSE')
+            #plt.ylabel('L2 error')
             plt.gca().set_yscale('log')
         plt.show()
