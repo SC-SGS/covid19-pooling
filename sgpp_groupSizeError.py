@@ -25,13 +25,14 @@ refineType = 'adaptive'
 level = 3
 numPoints = 600  # max number of grid points for adaptively refined grid
 
-numMCPoints = 20
+# 24 for paper data
+numMCPoints = 24
 ref_e_times = {}
 reSurf_e_times = {}
 
 for i, test_strategy in enumerate(test_strategies):
     reSurf = load_response_Surface(refineType, test_strategy, qoi, dim, degree, level, numPoints, lb, ub)
-    filename = f'precalc/values/group_mc{numMCPoints}_{test_strategy}__{number_of_instances}repetitions.pkl'
+    filename = f'precalc/values/group_mc{numMCPoints}_{test_strategy}_{number_of_instances}repetitions.pkl'
     with open(filename, 'rb') as fp:
         mcdata = pickle.load(fp)
     for key in mcdata:

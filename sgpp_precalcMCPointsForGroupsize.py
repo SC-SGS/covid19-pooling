@@ -38,11 +38,11 @@ def calculate_data(points3D):
         for key in multiprocessing_dict:
             regular_dict[key] = multiprocessing_dict[key]
 
-        filename = f'precalc/values/group_mc{numMCPoints}_{test_strategy}__{number_of_instances}repetitions.pkl'
+        filename = f'precalc/values/group_mc{numMCPoints}_{test_strategy}_{number_of_instances}repetitions.pkl'
         with open(filename, 'wb+') as fp:
             pickle.dump(regular_dict, fp)
 
-        print(f'calculated data for {numMCPoints} random points, saved as {filename}')
+        print(f'calculated data for {numMCPoints} points, saved as {filename}')
 
 
 def calcualte_randomly(numMCPoints):
