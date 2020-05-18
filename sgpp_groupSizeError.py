@@ -11,10 +11,10 @@ group_sizes = list(range(1, 33))
 test_strategies = [
     'individual-testing',
     'two-stage-testing',
-    # 'binary-splitting',
-    # 'RBS',
-    # 'purim',
-    # 'sobel'
+    'binary-splitting',
+    'RBS',
+    'purim',
+    'sobel'
 ]
 gridType, dim, degree, _, qoi, name, sample_size, num_daily_tests, \
     test_duration, num_simultaneous_tests,    number_of_instances, lb, ub,\
@@ -26,11 +26,12 @@ level = 3
 numPoints = 600  # max number of grid points for adaptively refined grid
 
 # 24 for paper data
-numMCPoints = 24
-ref_e_times = {}
-reSurf_e_times = {}
+numMCPoints = 100  # 24
 
 for i, test_strategy in enumerate(test_strategies):
+    ref_e_times = {}
+    reSurf_e_times = {}
+
     reSurf = load_response_Surface(refineType, test_strategy, qoi, dim, degree, level, numPoints, lb, ub)
     filename = f'precalc/values/group_mc{numMCPoints}_{test_strategy}_{number_of_instances}repetitions.pkl'
     with open(filename, 'rb') as fp:
@@ -42,40 +43,45 @@ for i, test_strategy in enumerate(test_strategies):
         if newkey not in ref_e_times:
             ref_e_times[newkey] = np.zeros(32)
         ref_e_times[newkey][group_size-1] = e_time
-# now we have a dict with arrays of lenght 32 as entries, each corresponding to a group size
+    # now we have a dict with arrays of lenght 32 as entries, each corresponding to a group size
 
+    for newkey in ref_e_times:
+        for j, group_size in enumerate(group_sizes):
+            prob_sick = newkey[0]
+            success_rate_test = newkey[1]
+            false_positive_rate = newkey[2]
+            if group_size in [1, 32]:
+                evaluationPoint = [prob_sick, success_rate_test, false_positive_rate, group_size]
+            else:
+                evaluationPoint = [prob_sick, success_rate_test, false_positive_rate, group_size]
+            e_time = reSurf.eval(pysgpp.DataVector(evaluationPoint))
+            if newkey not in reSurf_e_times:
+                reSurf_e_times[newkey] = np.zeros(32)
+            reSurf_e_times[newkey][group_size-1] = e_time
+    # now we have the same thing for response surface values
 
-for newkey in ref_e_times:
-    for j, group_size in enumerate(group_sizes):
-        prob_sick = newkey[0]
-        success_rate_test = newkey[1]
-        false_positive_rate = newkey[2]
-        evaluationPoint = [prob_sick, success_rate_test, false_positive_rate, group_size]
-        e_time = reSurf.eval(pysgpp.DataVector(evaluationPoint))
-        if newkey not in reSurf_e_times:
-            reSurf_e_times[newkey] = np.zeros(32)
-        reSurf_e_times[newkey][group_size-1] = e_time
-# now we have the same thing for response surface values
+    ref_optimal_group_sizes = np.zeros(numMCPoints)
+    reSurf_optimal_group_sizes = np.zeros(numMCPoints)
+    for i, newkey in enumerate(ref_e_times):
+        ref_optimal_group_sizes[i] = int(np.argmin(ref_e_times[newkey])+1)
+        ref_optimal_time = np.min(ref_e_times[newkey])
+        reSurf_optimal_group_sizes[i] = int(np.argmin(reSurf_e_times[newkey])+1)
+        reSurf_optimal_time = np.min(reSurf_e_times[newkey])
 
-ref_optimal_group_sizes = np.zeros(numMCPoints)
-reSurf_optimal_group_sizes = np.zeros(numMCPoints)
-for i, newkey in enumerate(ref_e_times):
-    ref_optimal_group_sizes[i] = int(np.argmin(ref_e_times[newkey])+1)
-    ref_optimal_time = np.min(ref_e_times[newkey])
-    reSurf_optimal_group_sizes[i] = int(np.argmin(reSurf_e_times[newkey])+1)
-    reSurf_optimal_time = np.min(reSurf_e_times[newkey])
+        # DEBUGGING
+        # print(ref_e_times[newkey])
+        # print(f'ref optimal {ref_optimal_group_sizes[i]} with {ref_optimal_time}')
+        # print(reSurf_e_times[newkey])
+        # print(f'reSurf optimal {reSurf_optimal_group_sizes[i]} with {reSurf_optimal_time}')
+        # print("\n")
+        # plt.plot(range(1, 33), ref_e_times[newkey], label='true', color='k')
+        # plt.plot([1, 32], [ref_optimal_time]*2, 'k--',)
+        # plt.plot(range(1, 33), reSurf_e_times[newkey], label='Kennfeld', color='C0')
+        # plt.plot([1, 32], [reSurf_optimal_time]*2, 'C0--')
+        # plt.legend()
+        # plt.xlabel('group size')
+        # plt.ylabel('expected time to test all')
+        # plt.show()
 
-    # DEBUGGING
-    print(ref_e_times[newkey])
-    print(f'ref optimal {ref_optimal_group_sizes[i]} with {ref_optimal_time}')
-    print(reSurf_e_times[newkey])
-    print(f'reSurf optimal {reSurf_optimal_group_sizes[i]} with {reSurf_optimal_time}')
-    print("\n")
-    plt.plot(range(1, 33), ref_e_times[newkey], label='true', color='k')
-    plt.plot([1, 32], [ref_optimal_time]*2, 'k--',)
-    plt.plot(range(1, 33), reSurf_e_times[newkey], label='Kennfeld', color='C0')
-    plt.plot([1, 32], [reSurf_optimal_time]*2, 'C0--')
-    plt.legend()
-    plt.xlabel('group size')
-    plt.ylabel('expected time to test all')
-    plt.show()
+    print(f'average error {np.mean(np.abs(reSurf_optimal_group_sizes-ref_optimal_group_sizes))}')
+    print(f'worst case error {np.max(np.abs(reSurf_optimal_group_sizes-ref_optimal_group_sizes))}\n')
