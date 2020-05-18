@@ -1,4 +1,3 @@
-import ipdb
 import pickle
 import pysgpp
 import sys
@@ -51,6 +50,7 @@ if __name__ == "__main__":
 
     initialLevel = 1
     numRefine = 10
+    maxPoints = 2000
     verbose = False
 
     num_total_calculations = 0
@@ -81,11 +81,14 @@ if __name__ == "__main__":
                 counter = counter + 1
                 print(f"refining ({counter}), grid size: {reSurf.getSize()}")
                 reSurf.refineSurplusAdaptive(numRefine, verbose)
+                if reSurf.getSize() > maxPoints:
+                    print(f"nothing to calculate for a maximum of {maxPoints} grid points")
+                    break
 
         print(f'Now calculating {len(todoPoints)} evaluations')
 
-        num_new_points = calculate_missing_values(todoPoints, sample_size, test_duration,
-                                                  num_simultaneous_tests, number_of_instances, test_strategy)
-        print(f'Calcualted {num_new_points} new evaluations\n')
-        num_total_calculations += num_new_points
-    print(f'In total claculated{num_total_calculations} evaluations')
+        # num_new_points = calculate_missing_values(todoPoints, sample_size, test_duration,
+        #                                           num_simultaneous_tests, number_of_instances, test_strategy)
+    #     print(f'Calcualted {num_new_points} new evaluations\n')
+    #     num_total_calculations += num_new_points
+    # print(f'In total claculated{num_total_calculations} evaluations')

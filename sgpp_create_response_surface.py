@@ -187,13 +187,13 @@ def auxiliary(refineType, test_strategies, qois, dim, degree, lb, ub, level=1, n
 
 
 if __name__ == "__main__":
-    saveReSurf = False
-    calcError = True
-    plotError = True
+    saveReSurf = True
+    calcError = False
+    plotError = False
     numMCPoints = 100
 
-    levels = [1, 2, 3, 4]
-    numPointsArray = [10, 100, 200, 400, 600]  # , 800]
+    levels = [1]  # [1, 2, 3, 4]
+    numPointsArray = [601]  # [10, 100, 200, 400, 600]  # , 800]
 
     initialLevel = 1    # initial level
     numRefine = 10       # number of grid points refined in each step
