@@ -153,7 +153,12 @@ def calculate_error(reSurf, qoi, numMCPoints, test_strategy, dim, number_of_inst
         success_rate_test = key[1]
         false_positive_rate = key[2]
         group_size = key[3]
-        point = pysgpp.DataVector([prob_sick, success_rate_test, false_positive_rate, group_size])
+
+        if group_size in [1, 32]:
+            point = pysgpp.DataVector([prob_sick, success_rate_test, false_positive_rate, group_size])
+        else:
+            point = pysgpp.DataVector([prob_sick, success_rate_test, false_positive_rate, group_size+1])
+
         reSurf_value = reSurf.eval(point)
         # print(f'{key}    {true_value}    {reSurf_value}     {np.abs(true_value-reSurf_value)}')
         l2error += (true_value-reSurf_value)**2
@@ -187,13 +192,13 @@ def auxiliary(refineType, test_strategies, qois, dim, degree, lb, ub, level=1, n
 
 
 if __name__ == "__main__":
-    saveReSurf = True
-    calcError = False
-    plotError = False
+    saveReSurf = False
+    calcError = True
+    plotError = calcError
     numMCPoints = 100
 
-    levels = [1]  # [1, 2, 3, 4]
-    numPointsArray = [601]  # [10, 100, 200, 400, 600]  # , 800]
+    levels = []  # [1, 2, 3, 4]
+    numPointsArray = [10, 100, 200, 400, 800]
 
     initialLevel = 1    # initial level
     numRefine = 10       # number of grid points refined in each step
@@ -203,7 +208,7 @@ if __name__ == "__main__":
         test_duration, num_simultaneous_tests,    number_of_instances, lb, ub,\
         boundaryLevel = getSetup()
     test_strategies = [
-        'individual-testing',
+        # 'individual-testing',
         'two-stage-testing',
         'binary-splitting',
         'RBS',
@@ -211,7 +216,7 @@ if __name__ == "__main__":
         'sobel'
     ]
     qois = [
-        # 'ppt',
+        'ppt',
         # 'sd-ppt',
         'time',
         # 'sd-time'
@@ -224,6 +229,8 @@ if __name__ == "__main__":
     adaptive_l2errors = np.zeros((len(test_strategies), len(qois), len(numPointsArray)))
     adaptive_nrmses = np.zeros((len(test_strategies), len(qois), len(numPointsArray)))
     adaptive_gridSizes = np.zeros((len(test_strategies), len(qois), len(numPointsArray)))
+
+    level = 'dummy'
 
     refineType = 'regular'
     print('regular')
