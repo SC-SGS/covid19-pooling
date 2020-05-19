@@ -198,7 +198,7 @@ if __name__ == "__main__":
     numMCPoints = 100
 
     levels = []  # [1, 2, 3, 4]
-    numPointsArray = [10, 100, 200, 400, 800]
+    numPointsArray = [10, 100, 200, 400, 800, 1600]
 
     initialLevel = 1    # initial level
     numRefine = 10       # number of grid points refined in each step
