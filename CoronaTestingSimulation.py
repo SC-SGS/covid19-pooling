@@ -497,7 +497,7 @@ class Corona_Simulation(object):
         # duration of one test [h]
         self.test_duration = test_duration
 
-        self.number_groupwise_tests = np.zeros(int(np.ceil(self.sample_size/group_size)))
+        self.number_groupwise_tests = np.ones(int(np.ceil(self.sample_size/group_size)))
 
         # initialize active groups
         self.active_groups = []
@@ -518,12 +518,14 @@ class Corona_Simulation(object):
                     testgroup[1], self.success_rate_test, self.false_posivite_rate_test, self.prob_sick,
                     self.tests_repetitions, self.test_result_decision_strategy)
                 self.number_of_tests += self.tests_repetitions
-                self.number_groupwise_tests[int(np.floor(testgroup[0][0] / group_size))] += 1
 
                 if testresult == 1:
                     if len(testgroup[1]) == 1:
                         self.sick_individuals.append(testgroup[0][0])
                     else:
+                        # If a group is tested positive all its individuals are tested positive.
+                        # We consider this two consecutive tests.
+                        self.number_groupwise_tests[int(np.floor(testgroup[0][0] / group_size))] = 2
                         for j in range(len(testgroup[1])):
                             self.active_groups += [[[testgroup[0][j]], [testgroup[1][j]]]]
 
@@ -549,7 +551,7 @@ class Corona_Simulation(object):
         # duration of one test [h]
         self.test_duration = test_duration
 
-        self.number_groupwise_tests = np.zeros(int(np.ceil(self.sample_size/group_size)))
+        self.number_groupwise_tests = np.ones(int(np.ceil(self.sample_size/group_size)))
 
         # initialize active groups
         self.active_groups = []
@@ -573,9 +575,13 @@ class Corona_Simulation(object):
                     testgroup[1], self.success_rate_test, self.false_posivite_rate_test, self.prob_sick,
                     self.tests_repetitions, self.test_result_decision_strategy)
                 self.number_of_tests += self.tests_repetitions
-                self.number_groupwise_tests[int(np.floor(testgroup[0][0] / group_size))] += 1
 
                 if testresult == 1:
+                    # when a group of initial size is tested positive a tree of depth
+                    #  log2(groupsize)+1 will be created. Otherwise only default depth 1
+                    if len(testgroup[1]) == group_size:
+                        self.number_groupwise_tests[int(
+                            np.floor(testgroup[0][0] / group_size))] = np.ceil(np.log2(group_size))+1
                     # if only one individual in group
                     if len(testgroup[1]) == 1:
                         self.sick_individuals.append(testgroup[0][0])

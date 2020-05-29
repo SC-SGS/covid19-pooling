@@ -156,7 +156,11 @@ class Corona_Simulation_Statistics():
         self.sd_num_sent_to_quarantine = np.std(self.num_sent_to_quarantine)
         self.sd_num_confirmed_per_test = np.std(self.num_confirmed_per_test)
 
-        self.e_number_groupwise_tests = np.zeros(len(self.number_groupwise_tests[0]))
+        self.worst_case_number_groupwise_tests = 0.0
+        self.average_number_groupwise_tests = np.zeros(len(self.number_groupwise_tests[0]))
         for key in self.number_groupwise_tests:
-            self.e_number_groupwise_tests += self.number_groupwise_tests[key]
-        self.e_number_groupwise_tests /= len(self.number_groupwise_tests)
+            self.average_number_groupwise_tests += self.number_groupwise_tests[key]
+            self.worst_case_number_groupwise_tests = max(self.worst_case_number_groupwise_tests,
+                                                         max(self.number_groupwise_tests[key]))
+        self.average_number_groupwise_tests /= len(self.number_groupwise_tests)
+        self.e_number_groupwise_tests = np.mean(self.average_number_groupwise_tests)
