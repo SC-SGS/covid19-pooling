@@ -189,7 +189,7 @@ class sgpp_simStorage():
             return e_number_groupwise_tests
         elif qoi == 'num_sick_people':
             return e_number_sick_people
-        elif qoi = 'sd-num_sick_people':
+        elif qoi == 'sd-num_sick_people':
             return sd_number_sick_people
         else:
             warnings.warn('unknown qoi')
