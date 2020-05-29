@@ -116,7 +116,7 @@ class Corona_Simulation_Statistics():
         self.number_sick_people = np.zeros(number_of_instances)
         self.num_confirmed_sick_individuals = np.zeros(number_of_instances)
         self.num_sent_to_quarantine = np.zeros(number_of_instances)
-        # self.number_groupwise_tests = {}
+        self.number_groupwise_tests = {}
         self.num_confirmed_per_test = np.zeros(number_of_instances)
 
         # Generate test data for the desired number of instances.
@@ -131,7 +131,7 @@ class Corona_Simulation_Statistics():
             self.num_confirmed_sick_individuals[i] = len(
                 self.test_instance.confirmed_sick_individuals)
             self.num_sent_to_quarantine[i] = len(self.test_instance.sick_individuals)
-            # self.number_groupwise_tests[i] = self.test_instance.number_groupwise_tests
+            self.number_groupwise_tests[i] = self.test_instance.number_groupwise_tests
 
             # derived metrics
             self.num_confirmed_per_test[i] = self.num_confirmed_sick_individuals[i] / self.number_of_tests[i]
@@ -156,7 +156,7 @@ class Corona_Simulation_Statistics():
         self.sd_num_sent_to_quarantine = np.std(self.num_sent_to_quarantine)
         self.sd_num_confirmed_per_test = np.std(self.num_confirmed_per_test)
 
-        # self.e_number_groupwise_tests = np.zeros(len(self.number_groupwise_tests[0]))
-        # for key in self.number_groupwise_tests:
-        #     self.e_number_groupwise_tests += self.number_groupwise_tests[key]
-        # self.e_number_groupwise_tests /= len(self.number_groupwise_tests)
+        self.e_number_groupwise_tests = np.zeros(len(self.number_groupwise_tests[0]))
+        for key in self.number_groupwise_tests:
+            self.e_number_groupwise_tests += self.number_groupwise_tests[key]
+        self.e_number_groupwise_tests /= len(self.number_groupwise_tests)

@@ -4,6 +4,7 @@
 import random as ran
 import math
 import numpy as np
+import warnings
 
 """Define auxiliary functions for Corona Testing Simulation."""
 
@@ -21,6 +22,9 @@ def _make_test(testlist, current_success_rate, false_posivite_rate, prob_sick,
             tests_repetitions - perform given number of multiple tests 
             test_result_decision_strategy - when using multiple tests decide either for 'max' or 'majority'
     """
+
+    if len(testlist) == 0:
+        warnings.warn('Testing empty group. This should not happen!')
 
     outcomes = [0]*tests_repetitions
     for t in range(tests_repetitions):

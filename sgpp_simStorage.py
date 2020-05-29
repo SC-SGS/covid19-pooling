@@ -73,9 +73,15 @@ def simulate(sample_size, prob_sick, success_rate_test, false_positive_rate, tes
     sd_num_confirmed_per_test = stat_test.sd_num_confirmed_per_test
     sd_num_sent_to_quarantine = stat_test.sd_num_sent_to_quarantine
 
+    # these are new and were not stored with the data until May 29th 2020
+    e_number_groupwise_tests = stat_test.e_number_groupwise_tests
+    e_number_sick_people = stat_test.e_number_sick_people
+    sd_number_sick_people = stat_test.sd_number_sick_people
+
     return [e_time, e_num_tests, e_num_confirmed_sick_individuals, e_num_confirmed_per_test,
             e_num_sent_to_quarantine, sd_time, sd_num_tests, sd_num_confirmed_sick_individuals,
-            sd_num_confirmed_per_test, sd_num_sent_to_quarantine]
+            sd_num_confirmed_per_test, sd_num_sent_to_quarantine, e_number_groupwise_tests,
+            e_number_sick_people, sd_number_sick_people]
 
 
 class sgpp_simStorage():
@@ -147,10 +153,17 @@ class sgpp_simStorage():
                                                      self.test_strategy)
             self.numNew += 1
             logging.info(f'so far {self.numNew} new evaluations')
-
-        [e_time, e_num_tests, e_num_confirmed_sick_individuals, e_num_confirmed_per_test,
-            e_num_sent_to_quarantine, sd_time, sd_num_tests, sd_num_confirmed_sick_individuals,
-            sd_num_confirmed_per_test, sd_num_sent_to_quarantine] = self.precalculatedValues[key]
+        try:
+            [e_time, e_num_tests, e_num_confirmed_sick_individuals, e_num_confirmed_per_test,
+                e_num_sent_to_quarantine, sd_time, sd_num_tests, sd_num_confirmed_sick_individuals,
+                sd_num_confirmed_per_test, sd_num_sent_to_quarantine, e_number_groupwise_tests,
+             e_number_sick_people, sd_number_sick_people] = self.precalculatedValues[key]
+        except:
+            # old datapoints which do not yet contain e_number_groupwise_tests,
+            #  e_num_sick_people and sd_num_sick_people
+            [e_time, e_num_tests, e_num_confirmed_sick_individuals, e_num_confirmed_per_test,
+                e_num_sent_to_quarantine, sd_time, sd_num_tests, sd_num_confirmed_sick_individuals,
+                sd_num_confirmed_per_test, sd_num_sent_to_quarantine] = self.precalculatedValues[key]
 
         if qoi == 'time':
             return e_time
@@ -172,5 +185,11 @@ class sgpp_simStorage():
             return sd_num_confirmed_per_test
         elif qoi == 'sd-quarantined':
             return sd_num_sent_to_quarantine
+        elif qoi == 'groupwise_tests':
+            return e_number_groupwise_tests
+        elif qoi == 'num_sick_people':
+            return e_number_sick_people
+        elif qoi = 'sd-num_sick_people':
+            return sd_number_sick_people
         else:
             warnings.warn('unknown qoi')

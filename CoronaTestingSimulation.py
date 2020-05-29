@@ -149,15 +149,26 @@ class Corona_Simulation(object):
 
     def RBS_time_step(self):
         for i in range(min(len(self.active_groups), self.num_simultaneous_tests)):
-            testgroup = self.active_groups[0]
-            self.active_groups = self.active_groups[1:]
+
+            # TODO: Empty test groups are added to active groups. This shouldn't happen!
+            # I'm catching it here, but we have to investigate this!
+            try:
+                testgroup = self.active_groups[0]
+                self.active_groups = self.active_groups[1:]
+                while len(testgroup[0]) == 0:
+                    testgroup = self.active_groups[0]
+                    self.active_groups = self.active_groups[1:]
+            except IndexError:
+                warnings.warn('IndexError')
+                return
+
             if len(testgroup[0]) == 1:
                 if not self.indicator:
+                    self.number_of_tests += self.tests_repetitions
+                    self.number_groupwise_tests[int(np.floor(testgroup[0][0] / self.group_size))] += 1
                     if aux._make_test(testgroup[1], self.success_rate_test, self.false_posivite_rate_test, self.prob_sick,
                                       self.tests_repetitions, self.test_result_decision_strategy) == 1:
                         self.sick_individuals.append(testgroup[0][0])
-                    self.number_of_tests += self.tests_repetitions
-                    # #self.number_groupwise_tests[int(np.floor(testgroup[0][0] / self.group_size))] += 1
                     return
                 else:
                     self.sick_individuals.append(testgroup[0][0])
@@ -168,7 +179,8 @@ class Corona_Simulation(object):
                         testgroup[1], self.success_rate_test, self.false_posivite_rate_test, self.prob_sick,
                         self.tests_repetitions, self.test_result_decision_strategy)
                     self.number_of_tests += self.tests_repetitions
-                    # #self.number_groupwise_tests[int(np.floor(testgroup[0][0] / self.group_size))] += 1
+                    # TODO ACTIVATE
+                    #self.number_groupwise_tests[int(np.floor(testgroup[0][0] / self.group_size))] += 1
                 else:
                     testresult = 1
 
@@ -184,7 +196,8 @@ class Corona_Simulation(object):
                             testgroup[i][1], self.success_rate_test, self.false_posivite_rate_test, self.prob_sick,
                             self.tests_repetitions, self.test_result_decision_strategy)
                         self.number_of_tests += self.tests_repetitions
-                        # #self.number_groupwise_tests[int(np.floor(testgroup[0][0] / self.group_size))] += 1
+                        # TODO ACTIVATE
+                        #self.number_groupwise_tests[int(np.floor(testgroup[i][0][0] / self.group_size))] += 1
                         # Determine the outcome of the finding
                     if result_test[0] == 0 and result_test[1] == 1:
                         sick_ind, healthy_ind = self._RBS_DIG(testgroup[1])
@@ -321,10 +334,10 @@ class Corona_Simulation(object):
         self.num_simultaneous_tests = num_simultaneous_tests
         self.test_duration = test_duration
         self.continuousIndex = 0
+        self.maxGroupsize = maxGroupsize
         # counter for the number of tests which are performed on one initial group of
         # maxGroupsize in total
-        # self.number_groupwise_tests = np.zeros(int(np.ceil(self.sample_size/maxGroupsize)))
-        # self.number_groupwise_tests_counter = -1
+        self.number_groupwise_tests = np.zeros(int(np.ceil(self.sample_size/maxGroupsize)))
 
         self.G, self.x = self.sobel_computeGx(1-self.prob_sick, maxGroupsize)
 
@@ -333,7 +346,6 @@ class Corona_Simulation(object):
         self.confirmed_sick_individuals = []
         # this is for indexing the individuals
         while (len(self.rawdata) > 0):
-            # self.number_groupwise_tests_counter += 1
             # initial groups have maximal size
             # TODO: inefficient way of getting groups
             self.get_next_group_from_data(maxGroupsize)
@@ -359,7 +371,8 @@ class Corona_Simulation(object):
                         testgroup[1], self.success_rate_test, self.false_posivite_rate_test, self.prob_sick,
                         self.tests_repetitions, self.test_result_decision_strategy)
                     self.number_of_tests += self.tests_repetitions
-                    # # self.number_groupwise_tests[self.number_groupwise_tests_counter] += 1
+                    # TODO: is this counting for the right group?
+                    self.number_groupwise_tests[int(np.floor(testgroup[0][0] / self.maxGroupsize))] += 1
                     if testresult == 1:
                         # infected
                         if len(testgroup[0]) == 1:
@@ -385,7 +398,8 @@ class Corona_Simulation(object):
                         testgroup[1], self.success_rate_test, self.false_posivite_rate_test, self.prob_sick,
                         self.tests_repetitions, self.test_result_decision_strategy)
                     self.number_of_tests += self.tests_repetitions
-                    # # self.number_groupwise_tests[self.number_groupwise_tests_counter] += 1
+                    # TODO: is this counting for the right group?
+                    self.number_groupwise_tests[int(np.floor(testgroup[0][0] / self.maxGroupsize))] += 1
                     if testresult == 1:
                         # pinfected
                         if len(testgroup[0]) == 1:
@@ -437,7 +451,8 @@ class Corona_Simulation(object):
     def individual_testing_time_dependent(self, num_simultaneous_tests, test_duration, group_size=1):
         self.num_simultaneous_tests = num_simultaneous_tests
         self.test_duration = test_duration
-        # self.number_groupwise_tests = np.ones(int(np.ceil(self.sample_size/group_size)))
+        if group_size == 1:
+            self.number_groupwise_tests = np.ones(self.sample_size)
 
         # initialize active groups
         self.active_groups = []
@@ -482,7 +497,7 @@ class Corona_Simulation(object):
         # duration of one test [h]
         self.test_duration = test_duration
 
-        # self.number_groupwise_tests = np.zeros(int(np.ceil(self.sample_size/group_size)))
+        self.number_groupwise_tests = np.zeros(int(np.ceil(self.sample_size/group_size)))
 
         # initialize active groups
         self.active_groups = []
@@ -503,16 +518,14 @@ class Corona_Simulation(object):
                     testgroup[1], self.success_rate_test, self.false_posivite_rate_test, self.prob_sick,
                     self.tests_repetitions, self.test_result_decision_strategy)
                 self.number_of_tests += self.tests_repetitions
-                # self.number_groupwise_tests[int(np.floor(testgroup[0][0] / group_size))] += 1
+                self.number_groupwise_tests[int(np.floor(testgroup[0][0] / group_size))] += 1
 
                 if testresult == 1:
                     if len(testgroup[1]) == 1:
                         self.sick_individuals.append(testgroup[0][0])
                     else:
                         for j in range(len(testgroup[1])):
-                            # self.number_groupwise_tests[int(np.floor(testgroup[0][0] / group_size))] += 1
-                            self.active_groups += [[[testgroup[0]
-                                                     [j]], [testgroup[1][j]]]]
+                            self.active_groups += [[[testgroup[0][j]], [testgroup[1][j]]]]
 
             if len(self.active_groups) < self.num_simultaneous_tests:
                 # groups have been fully processed. Add next group from data
@@ -536,7 +549,7 @@ class Corona_Simulation(object):
         # duration of one test [h]
         self.test_duration = test_duration
 
-        # self.number_groupwise_tests = np.zeros(int(np.ceil(self.sample_size/group_size)))
+        self.number_groupwise_tests = np.zeros(int(np.ceil(self.sample_size/group_size)))
 
         # initialize active groups
         self.active_groups = []
@@ -560,7 +573,7 @@ class Corona_Simulation(object):
                     testgroup[1], self.success_rate_test, self.false_posivite_rate_test, self.prob_sick,
                     self.tests_repetitions, self.test_result_decision_strategy)
                 self.number_of_tests += self.tests_repetitions
-                # self.number_groupwise_tests[int(np.floor(testgroup[0][0] / group_size))] += 1
+                self.number_groupwise_tests[int(np.floor(testgroup[0][0] / group_size))] += 1
 
                 if testresult == 1:
                     # if only one individual in group
@@ -595,7 +608,7 @@ class Corona_Simulation(object):
         self.test_duration = test_duration
         self.group_size = group_size
 
-        # self.number_groupwise_tests = np.zeros(int(np.ceil(self.sample_size/group_size)))
+        self.number_groupwise_tests = np.zeros(int(np.ceil(self.sample_size/group_size)))
 
         # initialize active groups
         self.active_groups = []
@@ -638,8 +651,8 @@ class Corona_Simulation(object):
         # this is for indexing the individuals
         self.continuousIndex = 0
 
-        # self.number_groupwise_tests = np.zeros(int(np.ceil(self.sample_size/(group_size**2))))
-        # self.number_groupwise_tests_counter = -1
+        # by definition the sequential depth of purim is always two (right?)
+        self.number_groupwise_tests = np.ones(int(np.ceil(self.sample_size/(group_size**2))))*2
 
         for i in range(self.num_simultaneous_tests):
             self.get_next_group_from_data(group_size**2)
@@ -647,7 +660,6 @@ class Corona_Simulation(object):
         while (len(self.active_groups) > 0):
             self.number_of_rounds += 1
             for i in range(min(len(self.active_groups), self.num_simultaneous_tests)):
-                # self.number_groupwise_tests_counter += 1
                 testgroup = self.active_groups[0]
                 self.active_groups = self.active_groups[1:]
                 nearest_square = round(np.sqrt(len(testgroup[1])))**2
@@ -658,7 +670,6 @@ class Corona_Simulation(object):
                         result = aux._make_test([testgroup[1][j]], self.success_rate_test, self.false_posivite_rate_test,
                                                 self.prob_sick, self.tests_repetitions, self.test_result_decision_strategy)
                         self.number_of_tests += self.tests_repetitions
-                        # # self.number_groupwise_tests[self.number_groupwise_tests_counter] += 1
                         if result == 1:
                             self.sick_individuals += [testgroup[0][j]]
                 elif int(diff) < 0:
@@ -680,14 +691,12 @@ class Corona_Simulation(object):
                         result = aux._make_test(testarray[k, :], self.success_rate_test, self.false_posivite_rate_test, self.prob_sick,
                                                 self.tests_repetitions, self.test_result_decision_strategy)
                         self.number_of_tests += self.tests_repetitions
-                        # # self.number_groupwise_tests[self.number_groupwise_tests_counter] += 1
                         if result == 1:
                             columns += [k]
                     for j in range(int(np.sqrt(nearest_square)+1)):
                         result = aux._make_test(testarray[:, j], self.success_rate_test, self.false_posivite_rate_test, self.prob_sick,
                                                 self.tests_repetitions, self.test_result_decision_strategy)
                         self.number_of_tests += self.tests_repetitions
-                        # # self.number_groupwise_tests[self.number_groupwise_tests_counter] += 1
                         if result == 1:
                             rows += [j]
                     for k in columns:
@@ -695,7 +704,6 @@ class Corona_Simulation(object):
                             result = aux._make_test([testarray[k, j]], self.success_rate_test, self.false_posivite_rate_test, self.prob_sick,
                                                     self.tests_repetitions, self.test_result_decision_strategy)
                             self.number_of_tests += self.tests_repetitions
-                            # # self.number_groupwise_tests[self.number_groupwise_tests_counter] += 1
                             if result == 1:
                                 self.sick_individuals += [int(testarray_index[k, j])]
                 else:
@@ -716,14 +724,12 @@ class Corona_Simulation(object):
                         result = aux._make_test(testarray[k, :], self.success_rate_test, self.false_posivite_rate_test, self.prob_sick,
                                                 self.tests_repetitions, self.test_result_decision_strategy)
                         self.number_of_tests += self.tests_repetitions
-                        # # self.number_groupwise_tests[self.number_groupwise_tests_counter] += 1
                         if result == 1:
                             columns += [k]
                     for j in range(int(np.sqrt(nearest_square))):
                         result = aux._make_test(testarray[:, j], self.success_rate_test, self.false_posivite_rate_test, self.prob_sick,
                                                 self.tests_repetitions, self.test_result_decision_strategy)
                         self.number_of_tests += self.tests_repetitions
-                        # # self.number_groupwise_tests[self.number_groupwise_tests_counter] += 1
                         if result == 1:
                             rows += [j]
                     for k in columns:
@@ -731,7 +737,6 @@ class Corona_Simulation(object):
                             result = aux._make_test([testarray[k, j]], self.success_rate_test, self.false_posivite_rate_test, self.prob_sick,
                                                     self.tests_repetitions, self.test_result_decision_strategy)
                             self.number_of_tests += self.tests_repetitions
-                            # # self.number_groupwise_tests[self.number_groupwise_tests_counter] += 1
                             if result == 1:
                                 self.sick_individuals += [int(testarray_index[k, j])]
 
