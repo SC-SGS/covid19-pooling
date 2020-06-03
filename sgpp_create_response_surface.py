@@ -112,6 +112,9 @@ def calculate_error(reSurf, qoi, numMCPoints, test_strategy, dim, number_of_inst
     l2error = 0
     nrmse = 0
 
+    # TEMPORARY
+    #number_of_instances = 40
+
     error_reference_data_file = f'precalc/values/mc{numMCPoints}_{test_strategy}_{dim}dim_{number_of_instances}repetitions_{int(sample_size/1000)}kpop.pkl'
     with open(error_reference_data_file, 'rb') as fp:
         error_reference_data = pickle.load(fp)
@@ -120,9 +123,11 @@ def calculate_error(reSurf, qoi, numMCPoints, test_strategy, dim, number_of_inst
     logging.info(
         f'loaded {numMCPoints} reference MC values calculated with {num_mc_repetitions} repetitions')
 
+    error_overview = np.zeros((numMCPoints, 6))
+
     max_val = 0
     min_val = 1e+14
-    for key in error_reference_data:
+    for i, key in enumerate(error_reference_data):
         try:
             [true_e_time, true_e_num_tests, true_e_num_confirmed_sick_individuals, true_e_num_confirmed_per_test,
                 true_e_num_sent_to_quarantine, true_sd_time, true_sd_num_tests, true_sd_num_confirmed_sick_individuals,
@@ -168,8 +173,17 @@ def calculate_error(reSurf, qoi, numMCPoints, test_strategy, dim, number_of_inst
             point = pysgpp.DataVector([prob_sick, success_rate_test, false_positive_rate, group_size+1])
 
         reSurf_value = reSurf.eval(point)
-        # print(f'{key}    {true_value}    {reSurf_value}     {np.abs(true_value-reSurf_value)}')
         l2error += (true_value-reSurf_value)**2
+
+        #print(f'{key}    {true_value}    {reSurf_value}     {np.abs(true_value-reSurf_value)}')
+        error_overview[i, 0:5] = key
+        error_overview[i, 5] = np.abs(true_value-reSurf_value)
+
+    # np.set_printoptions(linewidth=150)
+    # print(error_overview)
+    # plt.plot(error_overview[:, 3], error_overview[:, 5], 'bx')
+    # plt.show()
+
     l2error = np.sqrt(l2error/numMCPoints)
     if max_val-min_val > 0:
         nrmse = l2error / (max_val-min_val)
@@ -200,13 +214,13 @@ def auxiliary(refineType, test_strategies, qois, dim, degree, lb, ub, level=1, n
 
 
 if __name__ == "__main__":
-    saveReSurf = False
+    saveReSurf = True
     calcError = True
-    plotError = calcError
+    plotError = False  # calcError
     numMCPoints = 100
 
     levels = [1, 2, 3, 4]
-    numPointsArray = [10, 100, 200, 400, 800, 1200]
+    numPointsArray = []  # [10, 100, 200, 400, 800, 1200, 1400, 1600]
 
     initialLevel = 1    # initial level
     numRefine = 10       # number of grid points refined in each step
@@ -216,7 +230,7 @@ if __name__ == "__main__":
         test_duration, num_simultaneous_tests,    number_of_instances, lb, ub,\
         boundaryLevel = getSetup()
     test_strategies = [
-        # 'individual-testing',
+        'individual-testing',
         'two-stage-testing',
         'binary-splitting',
         'RBS',

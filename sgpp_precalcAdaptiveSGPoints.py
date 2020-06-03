@@ -7,7 +7,7 @@ from sgpp_simStorage import sgpp_simStorage, objFuncSGpp, generateKey
 from sgpp_precalc_parallel import calculate_missing_values
 
 
-def checkPrecalc(reSurf, precalculatedValues, number_of_instances):
+def checkPrecalc(reSurf, precalculatedValues, number_of_instances, sample_size):
     todoPoints = []
     todoPointsDetermined = False
     grid = reSurf.getGrid()
@@ -23,7 +23,8 @@ def checkPrecalc(reSurf, precalculatedValues, number_of_instances):
         success_rate_test = point_py[1]
         false_positive_rate = point_py[2]
         group_size = int(point_py[3])
-        key = generateKey(prob_sick, success_rate_test, false_positive_rate, group_size, number_of_instances)
+        key = generateKey(prob_sick, success_rate_test, false_positive_rate,
+                          group_size, number_of_instances, sample_size)
         if key not in precalculatedValues:
             # if point_py not in todoPoints:
             todoPoints.append(point_py)
@@ -38,12 +39,12 @@ if __name__ == "__main__":
         boundaryLevel = getSetup()
 
     test_strategies = [
-        # 'individual-testing',
-        'two-stage-testing',
-        'binary-splitting',
-        'RBS',
-        'purim',
-        'sobel'
+        'individual-testing',
+        # 'two-stage-testing',
+        # 'binary-splitting',
+        # 'RBS',
+        # 'purim',
+        # 'sobel'
     ]
     qoi = 'ppt'
     #qoi = 'time'
@@ -79,7 +80,8 @@ if __name__ == "__main__":
                 print(f"nothing to calculate for a maximum of {maxPoints} grid points")
                 break
             reSurf.nextSurplusAdaptiveGrid(numRefine, verbose)
-            todoPointsDetermined, todoPoints = checkPrecalc(reSurf, precalculatedValues, number_of_instances)
+            todoPointsDetermined, todoPoints = checkPrecalc(
+                reSurf, precalculatedValues, number_of_instances, sample_size)
             if not todoPointsDetermined:
                 counter = counter + 1
                 print(f"refining ({counter}), grid size: {reSurf.getSize()}")

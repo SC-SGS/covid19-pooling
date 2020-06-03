@@ -4,58 +4,37 @@ import pickle
 import time
 from Statistics import Corona_Simulation_Statistics
 import matplotlib.pyplot as plt
-from sgpp_create_response_surface import getSetup
+from sgpp_create_response_surface import getSetup, load_response_Surface
 from sgpp_simStorage import sgpp_simStorage
-from sgpp_precalc_parallel import precalc_parallel
+from sgpp_precalc_parallel import calculate_missing_values
 
 
 gridType, dim, degree, test_strategy, qoi, name, sample_size, num_daily_tests, \
-    test_duration, num_simultaneous_tests, evalType, scale_factor_pop,\
-    number_of_instances, lb, ub = getSetup()
+    test_duration, num_simultaneous_tests,    number_of_instances, lb, ub,\
+    boundaryLevel = getSetup()
 
-dummyCoeff = np.loadtxt(f'precalc/reSurf/np_coeff_{name}.dat')
-coefficients = pysgpp.DataVector(dummyCoeff)
-grid = pysgpp.Grid.unserializeFromFile(f'precalc/reSurf/grid_{name}.dat')
+refineType = 'adaptive'
+numPoints = 800
+level = 1
 
-precalculatedReSurf = pysgpp.SplineResponseSurface(
-    grid, coefficients, pysgpp.DataVector(lb[:dim]), pysgpp.DataVector(ub[:dim]), degree)
+precalculatedReSurf = load_response_Surface(
+    refineType, test_strategy, qoi, dim, degree, level, numPoints, lb, ub)
 print(f'precalculated response surface with {precalculatedReSurf.getSize()} points  has been loaded')
 
 # eval parameters:
 #probabilities_sick = np.linspace(0.001, 0.3, 21)
-probabilities_sick = [0.001, 0.0025, 0.005, 0.0075, 0.01, 0.025, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3]
-success_rate_test = 0.64
-false_positive_rate = 0.01378
-group_size = 2
+probabilities_sick = [0.01, 0.3]  # [0.001, 0.0025, 0.005, 0.0075, 0.01, 0.025, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3]
+success_rate_test = 0.99
+false_positive_rate = 0.01
 
-# precalculations
-# load precalculated data
-savePath = "/home/rehmemk/git/covid19-pooling/precalc/"
-precalcValuesFileName = savePath + f"precalc_values_{test_strategy}.pkl"
-try:
-    with open(precalcValuesFileName, 'rb') as fp:
-        precalculatedValues = pickle.load(fp)
-    print(f'loaded precalculated evaluations from {precalcValuesFileName}')
-except (FileNotFoundError):
-    print('could not find precalculated data at {}\nCreating new data file.'.format(
-        precalcValuesFileName))
-    precalculatedValues = {}
-points = []
-num_to_calculate = 0
-for prob_sick in probabilities_sick:
-    key = tuple([prob_sick, success_rate_test, false_positive_rate,
-                 group_size, evalType, number_of_instances])
-    if key not in precalculatedValues:
-        point = [prob_sick, success_rate_test, false_positive_rate, group_size]
-        points.append(point)
-        num_to_calculate += 1
-print(f'need to calculate {len(points)} new evaluations')
-multiprocessing_dict = precalc_parallel(points, sample_size, test_duration, num_simultaneous_tests,
-                                        number_of_instances, scale_factor_pop, test_strategy, evalType)
-for key in multiprocessing_dict:
-    precalculatedValues[key] = multiprocessing_dict[key]
-with open(precalcValuesFileName, "wb") as fp:
-    pickle.dump(precalculatedValues, fp)
+todoPoints = []
+for i, prob_sick in enumerate(probabilities_sick):
+    evaluationPoint = [prob_sick, success_rate_test, false_positive_rate, group_size]
+    todoPoints.append(evaluationPoint)
+
+num_new_points = calculate_missing_values(todoPoints, sample_size, test_duration,
+                                          num_simultaneous_tests, number_of_instances, test_strategy)
+print(f'Calcualted {num_new_points} new evaluations\n')
 
 # evaluations
 f = sgpp_simStorage(dim, test_strategy,  qoi, lb, ub)

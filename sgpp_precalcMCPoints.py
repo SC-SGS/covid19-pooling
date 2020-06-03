@@ -21,8 +21,8 @@ test_strategies = [
 ]
 
 # TEMPORARY!
-sample_size = 200000
-number_of_instances = 2
+sample_size = 50000
+number_of_instances = 20
 
 # same points for all methods
 np.random.seed(43)
