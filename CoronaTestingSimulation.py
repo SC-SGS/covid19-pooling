@@ -360,6 +360,11 @@ class Corona_Simulation(object):
             testgroup = [[], []]
             defective_set = [[], []]
             while(sobel_m != 0 or sobel_n != 0):
+                # TODO This was causing errors. Is it ok to break if both are empty (because there
+                # is nothing else to do), or is this a symptomatic error and the groups should never
+                # be empty !?
+                if len(binomial_set[0]) == 0 and len(defective_set[0]) == 0:
+                    break
                 k = self.x[(sobel_m, sobel_n)]
                 (mSuccess, nSuccess), (mFailure, nFailure) = self.sobel_step(sobel_m, sobel_n)
                 if sobel_m == 0:
@@ -371,8 +376,8 @@ class Corona_Simulation(object):
                         testgroup[1], self.success_rate_test, self.false_posivite_rate_test, self.prob_sick,
                         self.tests_repetitions, self.test_result_decision_strategy)
                     self.number_of_tests += self.tests_repetitions
-                    # TODO: is this counting for the right group?
                     self.number_groupwise_tests[int(np.floor(testgroup[0][0] / self.maxGroupsize))] += 1
+
                     if testresult == 1:
                         # infected
                         if len(testgroup[0]) == 1:
@@ -398,7 +403,6 @@ class Corona_Simulation(object):
                         testgroup[1], self.success_rate_test, self.false_posivite_rate_test, self.prob_sick,
                         self.tests_repetitions, self.test_result_decision_strategy)
                     self.number_of_tests += self.tests_repetitions
-                    # TODO: is this counting for the right group?
                     self.number_groupwise_tests[int(np.floor(testgroup[0][0] / self.maxGroupsize))] += 1
                     if testresult == 1:
                         # pinfected
