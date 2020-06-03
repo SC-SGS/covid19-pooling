@@ -20,8 +20,12 @@ test_strategies = [
     'sobel'
 ]
 
+# TEMPORARY!
+sample_size = 200000
+number_of_instances = 2
+
 # same points for all methods
-np.random.seed(42)
+np.random.seed(43)
 unitpoints = np.random.rand(numMCPoints, dim)
 points = [lb + (ub-lb)*point for point in unitpoints]
 for test_strategy in test_strategies:
@@ -32,7 +36,7 @@ for test_strategy in test_strategies:
     for key in multiprocessing_dict:
         regular_dict[key] = multiprocessing_dict[key]
 
-    filename = f'precalc/values/mc{numMCPoints}_{test_strategy}_{dim}dim_{number_of_instances}repetitions.pkl'
+    filename = f'precalc/values/mc{numMCPoints}_{test_strategy}_{dim}dim_{number_of_instances}repetitions_{int(sample_size/1000)}kpop.pkl'
     with open(filename, 'wb+') as fp:
         pickle.dump(regular_dict, fp)
 

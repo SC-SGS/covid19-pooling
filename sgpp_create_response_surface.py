@@ -33,11 +33,11 @@ def getSetup():
 
     # reference values. These are defined in sgpp_simStorage::init too.
     # TODO: That's dangerous. Define them only once!
-    sample_size = 200000 #100000
+    sample_size = 100000
     num_daily_tests = 1000
     test_duration = 5
     num_simultaneous_tests = int(num_daily_tests*test_duration/24.0)
-    number_of_instances = 11  # 5
+    number_of_instances = 20  # 5
 
     prob_sick_range = [0.001, 0.3]
     success_rate_test_range = [0.5, 0.99]  # [0.3, 0.99]
@@ -112,7 +112,7 @@ def calculate_error(reSurf, qoi, numMCPoints, test_strategy, dim, number_of_inst
     l2error = 0
     nrmse = 0
 
-    error_reference_data_file = f'precalc/values/mc{numMCPoints}_{test_strategy}_{dim}dim_{number_of_instances}repetitions.pkl'
+    error_reference_data_file = f'precalc/values/mc{numMCPoints}_{test_strategy}_{dim}dim_{number_of_instances}repetitions_{int(sample_size/1000)}kpop.pkl'
     with open(error_reference_data_file, 'rb') as fp:
         error_reference_data = pickle.load(fp)
 
@@ -123,9 +123,17 @@ def calculate_error(reSurf, qoi, numMCPoints, test_strategy, dim, number_of_inst
     max_val = 0
     min_val = 1e+14
     for key in error_reference_data:
-        [true_e_time, true_e_num_tests, true_e_num_confirmed_sick_individuals, true_e_num_confirmed_per_test,
-            true_e_num_sent_to_quarantine, true_sd_time, true_sd_num_tests, true_sd_num_confirmed_sick_individuals,
-            true_sd_num_confirmed_per_test, true_sd_num_sent_to_quarantine] = error_reference_data[key]
+        try:
+            [true_e_time, true_e_num_tests, true_e_num_confirmed_sick_individuals, true_e_num_confirmed_per_test,
+                true_e_num_sent_to_quarantine, true_sd_time, true_sd_num_tests, true_sd_num_confirmed_sick_individuals,
+                true_sd_num_confirmed_per_test, true_sd_num_sent_to_quarantine, true_e_number_groupwise_tests,
+                true_worst_case_number_groupwise_tests, true_e_number_sick_people,
+                true_sd_number_sick_people] = error_reference_data[key]
+
+        except:
+            [true_e_time, true_e_num_tests, true_e_num_confirmed_sick_individuals, true_e_num_confirmed_per_test,
+                true_e_num_sent_to_quarantine, true_sd_time, true_sd_num_tests, true_sd_num_confirmed_sick_individuals,
+                true_sd_num_confirmed_per_test, true_sd_num_sent_to_quarantine] = error_reference_data[key]
 
         if qoi == 'time':
             true_value = true_e_time

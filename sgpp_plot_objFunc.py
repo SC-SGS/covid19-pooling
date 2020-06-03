@@ -10,11 +10,12 @@ from sgpp_simStorage import sgpp_simStorage
 gridType, dim, degree, _, _, name, sample_size, num_daily_tests, \
     test_duration, num_simultaneous_tests,    number_of_instances, lb, ub,\
     boundaryLevel = getSetup()
+
 test_strategies = [
     # 'individual-testing',
     # 'two-stage-testing',
-    'binary-splitting',
-    # 'RBS',
+    # 'binary-splitting',
+    'RBS',
     # 'purim',
     # 'sobel'
 ]
@@ -22,7 +23,7 @@ test_strategies = [
 probabilities_sick = [0.01]  # [0.01, 0.02, 0.05, 0.1, 0.2, 0.3]
 success_rate_test = 0.99
 false_positive_rate_test = 0.01
-group_size = 3
+group_size = 32
 
 qoi = 'groupwise_tests'
 values = np.zeros((len(test_strategies), len(probabilities_sick)))
