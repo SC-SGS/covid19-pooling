@@ -50,7 +50,7 @@ if __name__ == "__main__":
 
     initialLevel = 1
     numRefine = 10
-    maxPoints = 1700  # 2500
+    maxPoints = 1600  # 2500
     verbose = False
 
     num_total_calculations = 0
@@ -75,15 +75,15 @@ if __name__ == "__main__":
         verbose = False
         while not todoPointsDetermined:
             previousSize = reSurf.getSize()
+            if previousSize > maxPoints:
+                print(f"nothing to calculate for a maximum of {maxPoints} grid points")
+                break
             reSurf.nextSurplusAdaptiveGrid(numRefine, verbose)
             todoPointsDetermined, todoPoints = checkPrecalc(reSurf, precalculatedValues, number_of_instances)
             if not todoPointsDetermined:
                 counter = counter + 1
                 print(f"refining ({counter}), grid size: {reSurf.getSize()}")
                 reSurf.refineSurplusAdaptive(numRefine, verbose)
-                if reSurf.getSize() > maxPoints:
-                    print(f"nothing to calculate for a maximum of {maxPoints} grid points")
-                    break
 
         print(f'Now calculating {len(todoPoints)} evaluations')
 
