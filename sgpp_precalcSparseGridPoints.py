@@ -26,7 +26,7 @@ if __name__ == "__main__":
         for d in range(dim):
             point[d] = lb[d] + (ub[d]-lb[d])*point[d]
         points.append(point)
-    print(f' Grid of dim {dim}, level {level} has {grid.getSize()} points')
+    print(f'{test_strategy}; Grid of dim {dim}, level {level} has {grid.getSize()} points')
 
     num_new_points = calculate_missing_values(points, sample_size, test_duration,
                                               num_simultaneous_tests, number_of_instances, test_strategy)

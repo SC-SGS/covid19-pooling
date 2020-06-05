@@ -33,7 +33,7 @@ def getSetup():
 
     # reference values. These are defined in sgpp_simStorage::init too.
     # TODO: That's dangerous. Define them only once!
-    sample_size = 100000
+    sample_size = 200000  # 100000
     num_daily_tests = 1000
     test_duration = 5
     num_simultaneous_tests = int(num_daily_tests*test_duration/24.0)
@@ -108,12 +108,13 @@ def load_response_Surface(refineType, test_strategy, qoi, dim, degree, level, nu
     return precalculatedReSurf
 
 
-def calculate_error(reSurf, qoi, numMCPoints, test_strategy, dim, number_of_instances):
+def calculate_error(reSurf, qoi, sample_size, numMCPoints, test_strategy, dim, number_of_instances):
     l2error = 0
     nrmse = 0
 
     # TEMPORARY
     #number_of_instances = 40
+    sample_size = 200000
 
     error_reference_data_file = f'precalc/values/mc{numMCPoints}_{test_strategy}_{dim}dim_{number_of_instances}repetitions_{int(sample_size/1000)}kpop.pkl'
     with open(error_reference_data_file, 'rb') as fp:
@@ -176,8 +177,8 @@ def calculate_error(reSurf, qoi, numMCPoints, test_strategy, dim, number_of_inst
         l2error += (true_value-reSurf_value)**2
 
         #print(f'{key}    {true_value}    {reSurf_value}     {np.abs(true_value-reSurf_value)}')
-        error_overview[i, 0:5] = key
-        error_overview[i, 5] = np.abs(true_value-reSurf_value)
+        #error_overview[i, 0:5] = key
+        #error_overview[i, 5] = np.abs(true_value-reSurf_value)
 
     # np.set_printoptions(linewidth=150)
     # print(error_overview)
@@ -192,21 +193,23 @@ def calculate_error(reSurf, qoi, numMCPoints, test_strategy, dim, number_of_inst
     return l2error, nrmse
 
 
-def auxiliary(refineType, test_strategies, qois, dim, degree, lb, ub, level=1, numPoints=1,
+def auxiliary(refineType, test_strategies, qois, sample_size, num_daily_tests, test_duration, dim,
+              degree, lb, ub, level=1, numPoints=1,
               initialLevel=1, numRefine=1, verbose=False):
     l2errors = np.zeros((len(test_strategies), len(qois)))
     nrmses = np.zeros((len(test_strategies), len(qois)))
     gridSizes = np.zeros((len(test_strategies), len(qois)))
     for i, test_strategy in enumerate(test_strategies):
         for j, qoi in enumerate(qois):
-            f = sgpp_simStorage(dim, test_strategy, lb, ub, number_of_instances)
+            f = sgpp_simStorage(dim, test_strategy, lb, ub, number_of_instances,
+                                sample_size, num_daily_tests, test_duration)
             objFunc = objFuncSGpp(f, qoi)
             reSurf = create_reSurf(objFunc, lb, ub, gridType, degree, boundaryLevel, refineType,
                                    level, numPoints, initialLevel, numRefine, verbose)
 
             if calcError:
                 l2errors[i, j], nrmses[i, j] = calculate_error(
-                    reSurf, qoi, numMCPoints, test_strategy, dim, number_of_instances)
+                    reSurf, qoi, sample_size, numMCPoints, test_strategy, dim, number_of_instances)
                 gridSizes[i, j] = reSurf.getSize()
             if saveReSurf:
                 save_reSurf(reSurf, refineType, test_strategy, qoi, dim, degree, level, numPoints)
@@ -214,10 +217,10 @@ def auxiliary(refineType, test_strategies, qois, dim, degree, lb, ub, level=1, n
 
 
 if __name__ == "__main__":
-    saveReSurf = True
+    saveReSurf = False
     calcError = True
-    plotError = False  # calcError
-    numMCPoints = 100
+    plotError = calcError
+    numMCPoints = 1000
 
     levels = [1, 2, 3, 4]
     numPointsArray = []  # [10, 100, 200, 400, 800, 1200, 1400, 1600]
@@ -259,14 +262,16 @@ if __name__ == "__main__":
     for l, level in enumerate(levels):
         print(f'level {level}')
         regular_l2errors[:, :, l], regular_nrmses[:, :, l], regular_gridSizes[:, :, l] = \
-            auxiliary(refineType, test_strategies, qois, dim, degree, lb, ub, level)
+            auxiliary(refineType, test_strategies, qois, sample_size,
+                      num_daily_tests, test_duration, dim, degree, lb, ub, level)
 
     refineType = 'adaptive'
     print('adaptive')
     for l, numPoints in enumerate(numPointsArray):
         print(f'num Points {numPoints}')
         adaptive_l2errors[:, :, l], adaptive_nrmses[:, :, l], adaptive_gridSizes[:, :, l]\
-            = auxiliary(refineType, test_strategies, qois, dim, degree, lb, ub, level, numPoints,
+            = auxiliary(refineType, test_strategies, qois, sample_size, num_daily_tests,
+                        test_duration, dim, degree, lb, ub, level, numPoints,
                         initialLevel, numRefine, verbose)
 
     if calcError and plotError:

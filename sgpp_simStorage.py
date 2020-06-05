@@ -89,18 +89,20 @@ def simulate(sample_size, prob_sick, success_rate_test, false_positive_rate, tes
 
 
 class sgpp_simStorage():
-    def __init__(self, dim, test_strategy, lb, ub, number_of_instances):
+    def __init__(self, dim, test_strategy, lb, ub, number_of_instances,
+                 reference_sample_size=100000, reference_num_daily_tests=1000, reference_test_duration=5):
         self.dim = dim
         self.test_strategy = test_strategy
         self.number_of_instances = number_of_instances
 
         # The reference population always consists of 100,000 individuals and 1000 tests
         # testing times can simply be scaled accordingly
-        self.reference_sample_size = 100000
-        self.reference_num_daily_tests = 1000
-        self.reference_test_duration = 5
+        self.reference_sample_size = reference_sample_size
+        self.reference_num_daily_tests = reference_num_daily_tests
+        self.reference_test_duration = reference_test_duration
         self.reference_num_simultaneous_tests = int(self.reference_num_daily_tests *
                                                     self.reference_test_duration/24.0)
+        print(f"sample size {self.reference_sample_size}")
 
         self.default_parameters = [0.1, 0.99, 0.01, 8, ]
 
