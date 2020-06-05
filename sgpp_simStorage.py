@@ -102,7 +102,6 @@ class sgpp_simStorage():
         self.reference_test_duration = reference_test_duration
         self.reference_num_simultaneous_tests = int(self.reference_num_daily_tests *
                                                     self.reference_test_duration/24.0)
-        print(f"sample size {self.reference_sample_size}")
 
         self.default_parameters = [0.1, 0.99, 0.01, 8, ]
 
