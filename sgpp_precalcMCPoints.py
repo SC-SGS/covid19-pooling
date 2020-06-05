@@ -5,7 +5,7 @@ import pickle
 import logging
 from sgpp_precalc_parallel import precalc_parallel
 
-numMCPoints = 100
+numMCPoints = 1000
 
 gridType, dim, degree, _, qoi, name, sample_size, num_daily_tests, \
     test_duration, num_simultaneous_tests,    number_of_instances, lb, ub,\
@@ -20,12 +20,8 @@ test_strategies = [
     'sobel'
 ]
 
-# TEMPORARY!
-sample_size = 50000
-number_of_instances = 20
-
 # same points for all methods
-np.random.seed(43)
+np.random.seed(44)
 unitpoints = np.random.rand(numMCPoints, dim)
 points = [lb + (ub-lb)*point for point in unitpoints]
 for test_strategy in test_strategies:
