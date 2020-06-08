@@ -14,7 +14,7 @@ def getSetup():
     logging.basicConfig(stream=sys.stderr, level=logging.CRITICAL)
 
     gridType = 'nakBsplineBoundary'
-    dim = 4
+    dim = 2  # 4
     degree = 3
 
     # test_strategy = 'individual-testing'
@@ -33,11 +33,11 @@ def getSetup():
 
     # reference values. These are defined in sgpp_simStorage::init too.
     # TODO: That's dangerous. Define them only once!
-    sample_size = 200000  # 100000
+    sample_size = 100000  # 100000
     num_daily_tests = 1000
     test_duration = 5
     num_simultaneous_tests = int(num_daily_tests*test_duration/24.0)
-    number_of_instances = 20  # 5
+    number_of_instances = 20  # 20
 
     prob_sick_range = [0.001, 0.3]
     success_rate_test_range = [0.5, 0.99]  # [0.3, 0.99]
@@ -47,6 +47,8 @@ def getSetup():
                    false_positive_rate_test_range[0], group_size_range[0]])
     ub = np.array([prob_sick_range[1], success_rate_test_range[1],
                    false_positive_rate_test_range[1], group_size_range[1]])
+    lb = lb[:dim]
+    ub = ub[:dim]
     # 1 + how much levels the boundary is coarser than the main axes,
     # 0 means one level finer, 1 means same level, 2 means one level coarser, etc.
     boundaryLevel = 2
@@ -113,8 +115,8 @@ def calculate_error(reSurf, qoi, sample_size, numMCPoints, test_strategy, dim, n
     nrmse = 0
 
     # TEMPORARY
-    #number_of_instances = 40
-    sample_size = 200000
+    #number_of_instances = 20
+    #sample_size = 200000
 
     error_reference_data_file = f'precalc/values/mc{numMCPoints}_{test_strategy}_{dim}dim_{number_of_instances}repetitions_{int(sample_size/1000)}kpop.pkl'
     with open(error_reference_data_file, 'rb') as fp:
@@ -128,6 +130,7 @@ def calculate_error(reSurf, qoi, sample_size, numMCPoints, test_strategy, dim, n
 
     max_val = 0
     min_val = 1e+14
+    worst_error = 0
     for i, key in enumerate(error_reference_data):
         try:
             [true_e_time, true_e_num_tests, true_e_num_confirmed_sick_individuals, true_e_num_confirmed_per_test,
@@ -176,6 +179,11 @@ def calculate_error(reSurf, qoi, sample_size, numMCPoints, test_strategy, dim, n
         reSurf_value = reSurf.eval(point)
         l2error += (true_value-reSurf_value)**2
 
+        if np.abs(true_value-reSurf_value) > worst_error:
+            worst_error = np.abs(true_value-reSurf_value)
+            relative_worst_error = worst_error/np.abs(true_value)
+            worst_key = key
+
         #print(f'{key}    {true_value}    {reSurf_value}     {np.abs(true_value-reSurf_value)}')
         #error_overview[i, 0:5] = key
         #error_overview[i, 5] = np.abs(true_value-reSurf_value)
@@ -184,6 +192,8 @@ def calculate_error(reSurf, qoi, sample_size, numMCPoints, test_strategy, dim, n
     # print(error_overview)
     # plt.plot(error_overview[:, 3], error_overview[:, 5], 'bx')
     # plt.show()
+
+    print(f'{test_strategy:20s}; worst error of {worst_error:.4e} which is relative error {relative_worst_error:.4} for key={worst_key}')
 
     l2error = np.sqrt(l2error/numMCPoints)
     if max_val-min_val > 0:
@@ -220,10 +230,10 @@ if __name__ == "__main__":
     saveReSurf = False
     calcError = True
     plotError = calcError
-    numMCPoints = 1000
+    numMCPoints = 100  # 1000
 
-    levels = [1, 2, 3, 4]
-    numPointsArray = []  # [10, 100, 200, 400, 800, 1200, 1400, 1600]
+    levels = []  # [1, 2, 3, 4]
+    numPointsArray = [10, 100, 200, 400, 800, 1200, 1500]
 
     initialLevel = 1    # initial level
     numRefine = 10       # number of grid points refined in each step
@@ -233,7 +243,7 @@ if __name__ == "__main__":
         test_duration, num_simultaneous_tests,    number_of_instances, lb, ub,\
         boundaryLevel = getSetup()
     test_strategies = [
-        'individual-testing',
+        # 'individual-testing',
         'two-stage-testing',
         'binary-splitting',
         'RBS',
@@ -282,8 +292,9 @@ if __name__ == "__main__":
         plt.title('regular')
         plotindex = 1
         for j, qoi in enumerate(qois):
-            plt.subplot(2, 2, plotindex)
-            plotindex += 1
+            if len(qois) > 1:
+                plt.subplot(2, 2, plotindex)
+                plotindex += 1
             for i, test_strategy in enumerate(test_strategies):
                 # plt.plot(regular_gridSizes[i, j, :], regular_l2errors[i, j, :],
                 #          label=test_strategy, marker=markers[i], color=colors[i])
@@ -300,8 +311,9 @@ if __name__ == "__main__":
         plt.title('adaptive')
         plotindex = 1
         for j, qoi in enumerate(qois):
-            plt.subplot(2, 2, plotindex)
-            plotindex += 1
+            if len(qois) > 1:
+                plt.subplot(2, 2, plotindex)
+                plotindex += 1
             for i, test_strategy in enumerate(test_strategies):
                 # plt.plot(adaptive_gridSizes[i, j, :], adaptive_l2errors[i, j, :],
                 #          label=test_strategy, marker=markers[i], color=colors[i])
