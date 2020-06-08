@@ -14,7 +14,7 @@ def getSetup():
     logging.basicConfig(stream=sys.stderr, level=logging.CRITICAL)
 
     gridType = 'nakBsplineBoundary'
-    dim = 2  # 4
+    dim = 4
     degree = 3
 
     # test_strategy = 'individual-testing'
@@ -33,11 +33,11 @@ def getSetup():
 
     # reference values. These are defined in sgpp_simStorage::init too.
     # TODO: That's dangerous. Define them only once!
-    sample_size = 100000  # 100000
-    num_daily_tests = 1000
+    sample_size = 10000  # 100000
+    num_daily_tests = 100
     test_duration = 5
     num_simultaneous_tests = int(num_daily_tests*test_duration/24.0)
-    number_of_instances = 20  # 20
+    number_of_instances = 10  # 20
 
     prob_sick_range = [0.001, 0.3]
     success_rate_test_range = [0.5, 0.99]  # [0.3, 0.99]

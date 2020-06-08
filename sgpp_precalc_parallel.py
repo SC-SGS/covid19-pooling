@@ -11,7 +11,8 @@ def worker(return_dict, sample_size, prob_sick, success_rate_test, false_positiv
     worker function for multiprocessing
     '''
 
-    key = generateKey(prob_sick, success_rate_test, false_positive_rate, group_size, number_of_instances,
+    key = generateKey(prob_sick, success_rate_test, false_positive_rate, group_size,
+                      test_strategy, num_simultaneous_tests, test_duration, number_of_instances,
                       sample_size)
     return_dict[key] = simulate(sample_size, prob_sick, success_rate_test, false_positive_rate,
                                 test_duration, group_size, num_simultaneous_tests, number_of_instances,
@@ -66,6 +67,7 @@ def calculate_missing_values(evaluationPoints, sample_size, test_duration, num_s
         precalculatedValues = {}
 
     # only for defualt values
+    dim = len(evaluationPoints[0])
     dummySimStorage = sgpp_simStorage(dim, test_strategy, [0], [0], number_of_instances)
     default_parameters = dummySimStorage.default_parameters
     [prob_sick, success_rate_test, false_positive_rate, group_size] = default_parameters
@@ -80,8 +82,9 @@ def calculate_missing_values(evaluationPoints, sample_size, test_duration, num_s
             false_positive_rate = point[2]
         if dim > 3:
             group_size = int(point[3])
-        key = generateKey(prob_sick, success_rate_test, false_positive_rate,
-                          group_size, number_of_instances, sample_size)
+        key = generateKey(prob_sick, success_rate_test, false_positive_rate, group_size,
+                          test_strategy, num_simultaneous_tests, test_duration, number_of_instances,
+                          sample_size)
         if key not in precalculatedValues:
             todoPoints.append(point)
 

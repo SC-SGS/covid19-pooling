@@ -67,7 +67,42 @@ def _split_groups(active_groups):
 def generate_data(sample_size, prob_sick):
     """ 
     Function to generate data of consecutively numbered individuals which are infected 
+    with chance prob_sick. The number of infected people is always ceil(sample_size*prob_sick)
+    """
+    number_sick_people = int(np.ceil(sample_size * prob_sick))
+    rawdata = []
+    sick_list = []
+    sick_list_indices = []
+    # Generate a sample of raw data: a list of sample_size instances with number_sick_people
+    # infected individuals (0), and all others healthy (1)
+
+    arr = np.ones(sample_size)
+    arr[:number_sick_people] = 0
+    np.random.shuffle(arr)
+    rawdata = list(arr.astype(int))
+
+    # sick_list is the opposite of rawdata. infected (1), healthy (0)
+    sick_list = [1-x for x in rawdata]
+
+    # if number_sick_people == 0:
+    #     print(
+    #         'There would have been zero infected (probably sample_size is quite small). For Debugging purposes one infection has been added')
+    #     infected_individual_index = 0
+    #     rawdata[infected_individual_index] = 0
+    #     sick_list[infected_individual_index] = 1
+    #     sick_list_indices.append(infected_individual_index)
+    #     number_sick_people = 1
+    # print('generated data with {} sick people among total {}'.format(number_sick_people, sample_size))
+    # print('they are {}\n----\n'.format(sick_list_indices))
+    return rawdata, sick_list, number_sick_people
+
+
+def generate_data_old(sample_size, prob_sick):
+    """ 
+    Function to generate data of consecutively numbered individuals which are infected 
     with chance prob_sick
+    THIS IS THE OLD ROUTINE, WHICH DISTRIBUTES SICKNESS WITH THE GIVEN PROBABILITY AND THUS HAS
+    FLUCTUATIONS IN THE ACTUAL NUMBER OF INFECTED INDIVIDUALS
     """
     rawdata = []
     sick_list = []

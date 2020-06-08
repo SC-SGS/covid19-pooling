@@ -42,11 +42,15 @@ class objFuncSGpp(pysgpp.ScalarFunction):
             warnings.warn('This objective function does not have precalculated data')
 
 
-def generateKey(prob_sick, success_rate_test, false_positive_rate, group_size, number_of_instances, sample_size=100000):
-    if sample_size == 100000:
-        return tuple([prob_sick, success_rate_test, false_positive_rate, group_size, number_of_instances])
-    else:
-        return tuple([prob_sick, success_rate_test, false_positive_rate, group_size, number_of_instances, sample_size])
+def generateKey(prob_sick, success_rate_test, false_positive_rate, group_size,
+                test_strategy, num_simultaneous_tests, test_duration, number_of_instances,
+                sample_size):
+    # if sample_size == 100000:
+    #     return tuple([prob_sick, success_rate_test, false_positive_rate, group_size, number_of_instances])
+    # else:
+    return tuple([prob_sick, success_rate_test, false_positive_rate, group_size,
+                  test_strategy, num_simultaneous_tests, test_duration, number_of_instances,
+                  sample_size])
 
 
 def simulate(sample_size, prob_sick, success_rate_test, false_positive_rate, test_duration,
@@ -149,8 +153,9 @@ class sgpp_simStorage():
         if self.dim > 3:
             group_size = int(x[3])
 
-        key = generateKey(prob_sick, success_rate_test, false_positive_rate,
-                          group_size, self.number_of_instances, self.reference_sample_size)
+        key = generateKey(prob_sick, success_rate_test, false_positive_rate, group_size,
+                          self.test_strategy, self.reference_num_simultaneous_tests, self.reference_test_duration,
+                          self.number_of_instances, self.reference_sample_size)
         if key not in self.precalculatedValues or recalculate == True:
             print(f'Calculating key={key}')
             self.precalculatedValues[key] = simulate(self.reference_sample_size, prob_sick, success_rate_test,

@@ -7,7 +7,8 @@ from sgpp_simStorage import sgpp_simStorage, objFuncSGpp, generateKey
 from sgpp_precalc_parallel import calculate_missing_values
 
 
-def checkPrecalc(reSurf, precalculatedValues, number_of_instances, sample_size, default_parameters):
+def checkPrecalc(reSurf, precalculatedValues, test_strategy, num_simultaneous_tests, test_duration, number_of_instances,
+                 sample_size, default_parameters):
     todoPoints = []
     todoPointsDetermined = False
     grid = reSurf.getGrid()
@@ -25,8 +26,9 @@ def checkPrecalc(reSurf, precalculatedValues, number_of_instances, sample_size, 
         success_rate_test = point_py[1]
         false_positive_rate = point_py[2]
         group_size = int(point_py[3])
-        key = generateKey(prob_sick, success_rate_test, false_positive_rate,
-                          group_size, number_of_instances, sample_size)
+        key = generateKey(prob_sick, success_rate_test, false_positive_rate, group_size,
+                          test_strategy, num_simultaneous_tests, test_duration, number_of_instances,
+                          sample_size)
         if key not in precalculatedValues:
             # if point_py not in todoPoints:
             todoPoints.append(point_py)
@@ -84,7 +86,8 @@ if __name__ == "__main__":
                 break
             reSurf.nextSurplusAdaptiveGrid(numRefine, verbose)
             todoPointsDetermined, todoPoints = checkPrecalc(
-                reSurf, precalculatedValues, number_of_instances, sample_size, default_parameters)
+                reSurf, precalculatedValues, test_strategy, num_simultaneous_tests, test_duration,
+                number_of_instances, sample_size, default_parameters)
             if not todoPointsDetermined:
                 counter = counter + 1
                 print(f"refining ({counter}), grid size: {reSurf.getSize()}")
