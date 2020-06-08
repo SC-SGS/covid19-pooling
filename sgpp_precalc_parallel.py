@@ -26,6 +26,7 @@ def precalc_parallel(points, sample_size, test_duration, num_simultaneous_tests,
     jobs = []
     dim = len(points[0])
     # only for defualt values
+    # TODO make this a general routine. Also below in calculate_missing_values
     dummySimStorage = sgpp_simStorage(dim, test_strategy, [0], [0], number_of_instances)
     default_parameters = dummySimStorage.default_parameters
     [prob_sick, success_rate_test, false_positive_rate, group_size] = default_parameters
@@ -64,12 +65,21 @@ def calculate_missing_values(evaluationPoints, sample_size, test_duration, num_s
             precalcValuesFileName))
         precalculatedValues = {}
 
+    # only for defualt values
+    dummySimStorage = sgpp_simStorage(dim, test_strategy, [0], [0], number_of_instances)
+    default_parameters = dummySimStorage.default_parameters
+    [prob_sick, success_rate_test, false_positive_rate, group_size] = default_parameters
+
     todoPoints = []
     for point in evaluationPoints:
-        prob_sick = point[0]
-        success_rate_test = point[1]
-        false_positive_rate = point[2]
-        group_size = int(point[3])
+        if dim > 0:
+            prob_sick = point[0]
+        if dim > 1:
+            success_rate_test = point[1]
+        if dim > 2:
+            false_positive_rate = point[2]
+        if dim > 3:
+            group_size = int(point[3])
         key = generateKey(prob_sick, success_rate_test, false_positive_rate,
                           group_size, number_of_instances, sample_size)
         if key not in precalculatedValues:
