@@ -1,7 +1,7 @@
 import multiprocessing
 import pickle
 import logging
-from sgpp_simStorage import simulate, generateKey
+from sgpp_simStorage import simulate, generateKey, sgpp_simStorage
 
 
 def worker(return_dict, sample_size, prob_sick, success_rate_test, false_positive_rate,
@@ -24,11 +24,21 @@ def precalc_parallel(points, sample_size, test_duration, num_simultaneous_tests,
     manager = multiprocessing.Manager()
     return_dict = manager.dict()
     jobs = []
+    dim = len(points[0])
+    # only for defualt values
+    dummySimStorage = sgpp_simStorage(dim, test_strategy, [0], [0], number_of_instances)
+    default_parameters = dummySimStorage.default_parameters
+    [prob_sick, success_rate_test, false_positive_rate, group_size] = default_parameters
+
     for point in points:
-        prob_sick = point[0]
-        success_rate_test = point[1]
-        false_positive_rate = point[2]
-        group_size = int(point[3])
+        if dim > 0:
+            prob_sick = point[0]
+        if dim > 1:
+            success_rate_test = point[1]
+        if dim > 2:
+            false_positive_rate = point[2]
+        if dim > 3:
+            group_size = int(point[3])
         proc = multiprocessing.Process(target=worker, args=(return_dict, sample_size, prob_sick, success_rate_test, false_positive_rate,
                                                             test_duration, group_size, num_simultaneous_tests, number_of_instances,
                                                             test_strategy))
