@@ -172,9 +172,10 @@ def calculate_error(reSurf, qoi, sample_size, numMCPoints, test_strategy, dim, n
         group_size = key[3]
 
         if group_size in [1, 32]:
-            point = pysgpp.DataVector([prob_sick, success_rate_test, false_positive_rate, group_size])
+            point = [prob_sick, success_rate_test, false_positive_rate, group_size]
         else:
-            point = pysgpp.DataVector([prob_sick, success_rate_test, false_positive_rate, group_size+1])
+            point = [prob_sick, success_rate_test, false_positive_rate, group_size+1]
+        point = pysgpp.DataVector(point[:dim])
 
         reSurf_value = reSurf.eval(point)
         l2error += (true_value-reSurf_value)**2
@@ -193,7 +194,7 @@ def calculate_error(reSurf, qoi, sample_size, numMCPoints, test_strategy, dim, n
     # plt.plot(error_overview[:, 3], error_overview[:, 5], 'bx')
     # plt.show()
 
-    print(f'{test_strategy:20s}; worst error of {worst_error:.4e} which is relative error {relative_worst_error:.4} for key={worst_key}')
+    # print(f'{test_strategy:20s}; worst error of {worst_error:.4e} which is relative error {relative_worst_error:.4} for key={worst_key}')
 
     l2error = np.sqrt(l2error/numMCPoints)
     if max_val-min_val > 0:

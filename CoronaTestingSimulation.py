@@ -159,7 +159,7 @@ class Corona_Simulation(object):
                     testgroup = self.active_groups[0]
                     self.active_groups = self.active_groups[1:]
             except IndexError:
-                warnings.warn('IndexError')
+                warnings.warn('IndexError in RBS')
                 return
 
             if len(testgroup[0]) == 1:

@@ -7,7 +7,7 @@ from sgpp_simStorage import sgpp_simStorage, objFuncSGpp, generateKey
 from sgpp_precalc_parallel import calculate_missing_values
 
 
-def checkPrecalc(reSurf, precalculatedValues, number_of_instances, sample_size):
+def checkPrecalc(reSurf, precalculatedValues, number_of_instances, sample_size, default_parameters):
     todoPoints = []
     todoPointsDetermined = False
     grid = reSurf.getGrid()
@@ -17,8 +17,10 @@ def checkPrecalc(reSurf, precalculatedValues, number_of_instances, sample_size):
     for n in range(grid.getSize()):
         point = gridStorage.getPoint(n)
         point_py = np.zeros(4)
-        for d in range(4):
+        for d in range(dim):
             point_py[d] = lb[d] + (ub[d]-lb[d])*point.getStandardCoordinate(d)
+        for d in range(dim, 4):
+            point_py[d] = default_parameters[d]
         prob_sick = point_py[0]
         success_rate_test = point_py[1]
         false_positive_rate = point_py[2]
@@ -40,11 +42,11 @@ if __name__ == "__main__":
 
     test_strategies = [
         'individual-testing',
-        # 'two-stage-testing',
-        # 'binary-splitting',
-        # 'RBS',
-        # 'purim',
-        # 'sobel'
+        'two-stage-testing',
+        'binary-splitting',
+        'RBS',
+        'purim',
+        'sobel'
     ]
     qoi = 'ppt'
     #qoi = 'time'
@@ -66,6 +68,7 @@ if __name__ == "__main__":
 
         f = sgpp_simStorage(dim, test_strategy, lb, ub, number_of_instances)
         objFunc = objFuncSGpp(f, qoi)
+        default_parameters = f.default_parameters
 
         reSurf = pysgpp.SplineResponseSurface(
             objFunc, pysgpp.DataVector(lb[:dim]), pysgpp.DataVector(ub[:dim]),
@@ -81,7 +84,7 @@ if __name__ == "__main__":
                 break
             reSurf.nextSurplusAdaptiveGrid(numRefine, verbose)
             todoPointsDetermined, todoPoints = checkPrecalc(
-                reSurf, precalculatedValues, number_of_instances, sample_size)
+                reSurf, precalculatedValues, number_of_instances, sample_size, default_parameters)
             if not todoPointsDetermined:
                 counter = counter + 1
                 print(f"refining ({counter}), grid size: {reSurf.getSize()}")
