@@ -4,7 +4,6 @@ import numpy as np
 import pickle
 from sgpp_create_response_surface import getSetup, load_response_Surface
 from sgpp_simStorage import sgpp_simStorage
-from sgpp_precalc_parallel import calculate_missing_values
 
 # load precalculated response surface
 gridType, dim, degree, _, _, _, sample_size, num_daily_tests, \

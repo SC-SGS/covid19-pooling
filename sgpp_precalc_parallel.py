@@ -25,10 +25,14 @@ def precalc_parallel(points, sample_size, test_duration, num_simultaneous_tests,
     manager = multiprocessing.Manager()
     return_dict = manager.dict()
     jobs = []
-    dim = len(points[0])
+    try:
+        dim = len(points[0])
+    except IndexError:
+        dim = 1
     # only for defualt values
     # TODO make this a general routine. Also below in calculate_missing_values
-    dummySimStorage = sgpp_simStorage(dim, test_strategy, [0], [0], number_of_instances)
+    dummySimStorage = sgpp_simStorage(dim, test_strategy, [0], [
+                                      0], number_of_instances, sample_size, 100, test_duration)
     default_parameters = dummySimStorage.default_parameters
     [prob_sick, success_rate_test, false_positive_rate, group_size] = default_parameters
 
@@ -53,7 +57,7 @@ def precalc_parallel(points, sample_size, test_duration, num_simultaneous_tests,
     return return_dict
 
 
-def calculate_missing_values(evaluationPoints, sample_size, test_duration, num_simultaneous_tests,
+def calculate_missing_values(dim, evaluationPoints, sample_size, test_duration, num_simultaneous_tests,
                              number_of_instances, test_strategy):
     # load precalculated data
     savePath = "/home/rehmemk/git/covid19-pooling/precalc/"
@@ -67,8 +71,8 @@ def calculate_missing_values(evaluationPoints, sample_size, test_duration, num_s
         precalculatedValues = {}
 
     # only for defualt values
-    dim = len(evaluationPoints[0])
-    dummySimStorage = sgpp_simStorage(dim, test_strategy, [0], [0], number_of_instances)
+    dummySimStorage = sgpp_simStorage(dim, test_strategy, [0], [
+                                      0], number_of_instances, sample_size, 100, test_duration)
     default_parameters = dummySimStorage.default_parameters
     [prob_sick, success_rate_test, false_positive_rate, group_size] = default_parameters
 

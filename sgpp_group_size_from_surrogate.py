@@ -61,7 +61,7 @@ for i, test_strategy in enumerate(test_strategies):
         scaled_e_times[i, j] = e_time*num_daily_tests/input_daily_tests * input_population/sample_size
 
     if calculate_comparison:
-        calculate_missing_values(evaluationPoints, sample_size, test_duration, num_simultaneous_tests,
+        calculate_missing_values(dim, evaluationPoints, sample_size, test_duration, num_simultaneous_tests,
                                  number_of_instances, scale_factor_pop, test_strategy, evalType)
 
         f = sgpp_simStorage(dim, test_strategy,  qoi, lb, ub)

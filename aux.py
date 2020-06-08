@@ -84,7 +84,8 @@ def generate_data(sample_size, prob_sick):
     # sick_list is the opposite of rawdata. infected (1), healthy (0)
     sick_list = [1-x for x in rawdata]
 
-    # if number_sick_people == 0:
+    if number_sick_people == 0:
+        print("this test population contains no infected")
     #     print(
     #         'There would have been zero infected (probably sample_size is quite small). For Debugging purposes one infection has been added')
     #     infected_individual_index = 0

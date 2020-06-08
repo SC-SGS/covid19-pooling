@@ -26,7 +26,7 @@ def calculateOptimalGroupSize(test_strategy, probabilities_sick, success_rate_te
         for k, group_size in enumerate(group_sizes):
             evaluationPoint = [prob_sick, success_rate_test, false_positive_rate, group_size]
             evaluationPoints.append(evaluationPoint)
-    calculate_missing_values(evaluationPoints, sample_size, test_duration, num_simultaneous_tests,
+    calculate_missing_values(dim, evaluationPoints, sample_size, test_duration, num_simultaneous_tests,
                              number_of_instances, test_strategy)
 
     e_times = np.zeros((len(group_sizes), len(probabilities_sick)))

@@ -28,6 +28,6 @@ if __name__ == "__main__":
         points.append(point)
     print(f'{test_strategy}; Grid of dim {dim}, level {level} has {grid.getSize()} points')
 
-    num_new_points = calculate_missing_values(points, sample_size, test_duration,
+    num_new_points = calculate_missing_values(dim, points, sample_size, test_duration,
                                               num_simultaneous_tests, number_of_instances, test_strategy)
     print(f'Calcualted {num_new_points} new evaluations\n')

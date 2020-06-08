@@ -135,6 +135,7 @@ class Corona_Simulation_Statistics():
 
             # derived metrics
             self.num_confirmed_per_test[i] = self.num_confirmed_sick_individuals[i] / self.number_of_tests[i]
+
         # Perform statistical analysis
         # means
         self.e_number_of_tests = np.mean(self.number_of_tests)

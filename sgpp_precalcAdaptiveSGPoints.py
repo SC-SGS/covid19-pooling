@@ -95,7 +95,7 @@ if __name__ == "__main__":
 
         print(f'Now calculating {len(todoPoints)} evaluations')
 
-        num_new_points = calculate_missing_values(todoPoints, sample_size, test_duration,
+        num_new_points = calculate_missing_values(dim, todoPoints, sample_size, test_duration,
                                                   num_simultaneous_tests, number_of_instances, test_strategy)
         print(f'Calcualted {num_new_points} new evaluations\n')
         num_total_calculations += num_new_points

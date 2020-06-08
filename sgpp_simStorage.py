@@ -94,7 +94,7 @@ def simulate(sample_size, prob_sick, success_rate_test, false_positive_rate, tes
 
 class sgpp_simStorage():
     def __init__(self, dim, test_strategy, lb, ub, number_of_instances,
-                 reference_sample_size=100000, reference_num_daily_tests=1000, reference_test_duration=5):
+                 reference_sample_size, reference_num_daily_tests, reference_test_duration):
         self.dim = dim
         self.test_strategy = test_strategy
         self.number_of_instances = number_of_instances
@@ -107,10 +107,11 @@ class sgpp_simStorage():
         self.reference_num_simultaneous_tests = int(self.reference_num_daily_tests *
                                                     self.reference_test_duration/24.0)
 
-        self.default_parameters = [0.1, 0.99, 0.01, 8, ]
+        #self.default_parameters = [0.1, 0.99, 0.01, 8]
+        self.default_parameters = [0.1, 1.0, 0.0, 8]
 
-        self.lowerBounds = pysgpp.DataVector(lb[:dim])
-        self.upperBounds = pysgpp.DataVector(ub[:dim])
+        self.lowerBounds = pysgpp.DataVector(lb[:self.dim])
+        self.upperBounds = pysgpp.DataVector(ub[:self.dim])
 
         # load precalculated data
         savePath = "/home/rehmemk/git/covid19-pooling/precalc/"

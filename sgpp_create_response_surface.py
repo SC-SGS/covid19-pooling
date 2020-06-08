@@ -17,31 +17,31 @@ def getSetup():
     dim = 4
     degree = 3
 
-    # test_strategy = 'individual-testing'
-    # test_strategy = 'binary-splitting'
+    #test_strategy = 'individual-testing'
+    #test_strategy = 'binary-splitting'
     test_strategy = 'two-stage-testing'
     # test_strategy = 'RBS'
     # test_strategy = 'purim'
     # test_strategy = 'sobel'
 
-    qoi = 'time'
+    qoi = 'ppt'
+    # qoi = 'time'
     # qoi = 'numtests'
     # qoi = 'numconfirmed'
-    #qoi = 'ppt'
 
     name = f'{test_strategy}_{qoi}_dim{dim}_deg{degree}'
 
     # reference values. These are defined in sgpp_simStorage::init too.
     # TODO: That's dangerous. Define them only once!
-    sample_size = 10000  # 100000
-    num_daily_tests = 100
+    sample_size = 100000  # 100000
+    num_daily_tests = 1000
     test_duration = 5
     num_simultaneous_tests = int(num_daily_tests*test_duration/24.0)
-    number_of_instances = 10  # 20
+    number_of_instances = 5
 
     prob_sick_range = [0.001, 0.3]
-    success_rate_test_range = [0.5, 0.99]  # [0.3, 0.99]
-    false_positive_rate_test_range = [0.01, 0.2]
+    success_rate_test_range = [0.5, 1.0]  # [0.3, 0.99]
+    false_positive_rate_test_range = [0.0, 0.2]  # [0.01, 0.2]
     group_size_range = [1, 32]
     lb = np.array([prob_sick_range[0], success_rate_test_range[0],
                    false_positive_rate_test_range[0], group_size_range[0]])
@@ -167,14 +167,16 @@ def calculate_error(reSurf, qoi, sample_size, numMCPoints, test_strategy, dim, n
             min_val = true_value
 
         prob_sick = key[0]
+
         success_rate_test = key[1]
         false_positive_rate = key[2]
         group_size = key[3]
 
-        if group_size in [1, 32]:
-            point = [prob_sick, success_rate_test, false_positive_rate, group_size]
-        else:
-            point = [prob_sick, success_rate_test, false_positive_rate, group_size+1]
+        # if group_size in [1, 32]:
+        #     point = [prob_sick, success_rate_test, false_positive_rate, group_size]
+        # else:
+        #     point = [prob_sick, success_rate_test, false_positive_rate, group_size+1]
+        point = [prob_sick, success_rate_test, false_positive_rate, group_size]
         point = pysgpp.DataVector(point[:dim])
 
         reSurf_value = reSurf.eval(point)
@@ -228,13 +230,13 @@ def auxiliary(refineType, test_strategies, qois, sample_size, num_daily_tests, t
 
 
 if __name__ == "__main__":
-    saveReSurf = False
+    saveReSurf = True
     calcError = True
     plotError = calcError
-    numMCPoints = 100  # 1000
+    numMCPoints = 100
 
-    levels = []  # [1, 2, 3, 4]
-    numPointsArray = [10, 100, 200, 400, 800, 1200, 1500]
+    levels = [1, 2, 3]
+    numPointsArray = []  # [10, 100, 200, 400, 800, 1200, 1500]
 
     initialLevel = 1    # initial level
     numRefine = 10       # number of grid points refined in each step
@@ -244,12 +246,12 @@ if __name__ == "__main__":
         test_duration, num_simultaneous_tests,    number_of_instances, lb, ub,\
         boundaryLevel = getSetup()
     test_strategies = [
-        # 'individual-testing',
-        'two-stage-testing',
-        'binary-splitting',
-        'RBS',
-        'purim',
-        'sobel'
+        'individual-testing',
+        # 'two-stage-testing',
+        # 'binary-splitting',
+        # 'RBS',
+        # 'purim',
+        # 'sobel'
     ]
     qois = [
         'ppt',
@@ -289,41 +291,44 @@ if __name__ == "__main__":
         markers = ['o', '*', '^', '+', 's', 'd', 'v', '<', '>']
         colors = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9']
 
-        plt.figure(figsize=(12, 8))
-        plt.title('regular')
-        plotindex = 1
-        for j, qoi in enumerate(qois):
-            if len(qois) > 1:
-                plt.subplot(2, 2, plotindex)
-                plotindex += 1
-            for i, test_strategy in enumerate(test_strategies):
-                # plt.plot(regular_gridSizes[i, j, :], regular_l2errors[i, j, :],
-                #          label=test_strategy, marker=markers[i], color=colors[i])
-                plt.plot(regular_gridSizes[i, j, :], regular_nrmses[i, j, :],
-                         label=test_strategy, marker=markers[i], color=colors[i])
-                plt.legend()
-            plt.title(qoi)
-            plt.xlabel('num regular grid points')
-            plt.ylabel('NRMSE')
-            #plt.ylabel('L2 error')
-            plt.gca().set_yscale('log')
+        if len(levels) > 0:
+            plt.figure(figsize=(12, 8))
+            plt.title('regular')
+            plotindex = 1
+            for j, qoi in enumerate(qois):
+                if len(qois) > 1:
+                    plt.subplot(2, 2, plotindex)
+                    plotindex += 1
+                for i, test_strategy in enumerate(test_strategies):
+                    # plt.plot(regular_gridSizes[i, j, :], regular_l2errors[i, j, :],
+                    #          label=test_strategy, marker=markers[i], color=colors[i])
+                    plt.plot(regular_gridSizes[i, j, :], regular_nrmses[i, j, :],
+                             label=test_strategy, marker=markers[i], color=colors[i])
+                    plt.legend()
+                plt.title(qoi)
+                plt.xlabel('num regular grid points')
+                plt.ylabel('NRMSE')
+                #plt.ylabel('L2 error')
+                plt.gca().set_yscale('log')
 
-        plt.figure(figsize=(12, 8))
-        plt.title('adaptive')
-        plotindex = 1
-        for j, qoi in enumerate(qois):
-            if len(qois) > 1:
-                plt.subplot(2, 2, plotindex)
-                plotindex += 1
-            for i, test_strategy in enumerate(test_strategies):
-                # plt.plot(adaptive_gridSizes[i, j, :], adaptive_l2errors[i, j, :],
-                #          label=test_strategy, marker=markers[i], color=colors[i])
-                plt.plot(adaptive_gridSizes[i, j, :], adaptive_nrmses[i, j, :],
-                         label=test_strategy, marker=markers[i], color=colors[i])
-                plt.legend()
-            plt.title(qoi)
-            plt.xlabel('num adaptive grid points')
-            plt.ylabel('NRMSE')
-            #plt.ylabel('L2 error')
-            plt.gca().set_yscale('log')
+        if len(numPointsArray) > 0:
+            plt.figure(figsize=(12, 8))
+            plt.title('adaptive')
+            plotindex = 1
+            for j, qoi in enumerate(qois):
+                if len(qois) > 1:
+                    plt.subplot(2, 2, plotindex)
+                    plotindex += 1
+                for i, test_strategy in enumerate(test_strategies):
+                    # plt.plot(adaptive_gridSizes[i, j, :], adaptive_l2errors[i, j, :],
+                    #          label=test_strategy, marker=markers[i], color=colors[i])
+                    plt.plot(adaptive_gridSizes[i, j, :], adaptive_nrmses[i, j, :],
+                             label=test_strategy, marker=markers[i], color=colors[i])
+                    plt.legend()
+                plt.title(qoi)
+                plt.xlabel('num adaptive grid points')
+                plt.ylabel('NRMSE')
+                #plt.ylabel('L2 error')
+                plt.gca().set_yscale('log')
+
         plt.show()

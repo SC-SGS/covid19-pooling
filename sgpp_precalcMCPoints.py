@@ -5,15 +5,15 @@ import pickle
 import logging
 from sgpp_precalc_parallel import precalc_parallel
 
-numMCPoints = 10
+numMCPoints = 100
 
 gridType, dim, degree, _, qoi, name, sample_size, num_daily_tests, \
     test_duration, num_simultaneous_tests,    number_of_instances, lb, ub,\
     boundaryLevel = getSetup()
 
 test_strategies = [
-    # 'individual-testing',
-    'two-stage-testing',
+    'individual-testing',
+    # 'two-stage-testing',
     # 'binary-splitting',
     # 'RBS',
     # 'purim',

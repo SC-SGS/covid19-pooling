@@ -111,7 +111,7 @@ if __name__ == "__main__":
                                              reference_test_duration/24.0)  # num_simultaneous_tests
             ref_number_of_instances = 5  # number_of_instances
 
-            calculate_missing_values(ref_evaluationPoints, ref_sample_size, test_duration, ref_num_simultaneous_tests,
+            calculate_missing_values(dim, ref_evaluationPoints, ref_sample_size, test_duration, ref_num_simultaneous_tests,
                                      ref_number_of_instances, test_strategy)
             print('precalculated missing values')
             f = sgpp_simStorage(dim, test_strategy,  lb, ub, ref_number_of_instances)
