@@ -150,17 +150,14 @@ class Corona_Simulation(object):
     def RBS_time_step(self):
         for i in range(min(len(self.active_groups), self.num_simultaneous_tests)):
 
-            # TODO: Empty test groups are added to active groups. This shouldn't happen!
-            # I'm catching it here, but we have to investigate this!
-            try:
-                testgroup = self.active_groups[0]
-                self.active_groups = self.active_groups[1:]
-                while len(testgroup[0]) == 0:
-                    testgroup = self.active_groups[0]
-                    self.active_groups = self.active_groups[1:]
-            except IndexError:
-                warnings.warn('IndexError in RBS')
+            # remove empty lists
+            self.active_groups = [x for x in self.active_groups if any(x)]
+            if not any(self.active_groups):
+                # if self.active_groups is empty
                 return
+
+            testgroup = self.active_groups[0]
+            self.active_groups = self.active_groups[1:]
 
             if len(testgroup[0]) == 1:
                 if not self.indicator:
@@ -173,7 +170,9 @@ class Corona_Simulation(object):
                 else:
                     self.sick_individuals.append(testgroup[0][0])
                     return
-            else:
+            # else:
+            # fix for empty groups ?
+            elif len(testgroup[0]) != 0:
                 if not self.indicator:
                     testresult = aux._make_test(
                         testgroup[1], self.success_rate_test, self.false_posivite_rate_test, self.prob_sick,

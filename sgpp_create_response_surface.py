@@ -3,58 +3,25 @@ import numpy as np
 import sys
 import pickle
 import time
+import os
 import logging
 import matplotlib.pyplot as plt
+from Statistics import Corona_Simulation_Statistics
 from sgpp_simStorage import sgpp_simStorage, objFuncSGpp
+from sgpp_calculate_stochastic_noise import stochastic_noise
+from setup import getSetup
 
-
-def getSetup():
-    # logging.basicConfig(stream=sys.stderr, level=logging.INFO)
-    # logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
-    logging.basicConfig(stream=sys.stderr, level=logging.CRITICAL)
-
-    gridType = 'nakBsplineBoundary'
-    dim = 4
-    degree = 3
-
-    #test_strategy = 'individual-testing'
-    #test_strategy = 'binary-splitting'
-    test_strategy = 'two-stage-testing'
-    # test_strategy = 'RBS'
-    # test_strategy = 'purim'
-    # test_strategy = 'sobel'
-
-    qoi = 'ppt'
-    # qoi = 'time'
-    # qoi = 'numtests'
-    # qoi = 'numconfirmed'
-
-    name = f'{test_strategy}_{qoi}_dim{dim}_deg{degree}'
-
-    # reference values. These are defined in sgpp_simStorage::init too.
-    # TODO: That's dangerous. Define them only once!
-    sample_size = 100000  # 100000
-    num_daily_tests = 1000
-    test_duration = 5
-    num_simultaneous_tests = int(num_daily_tests*test_duration/24.0)
-    number_of_instances = 5
-
-    prob_sick_range = [0.001, 0.3]
-    success_rate_test_range = [0.5, 1.0]  # [0.3, 0.99]
-    false_positive_rate_test_range = [0.0, 0.2]  # [0.01, 0.2]
-    group_size_range = [1, 32]
-    lb = np.array([prob_sick_range[0], success_rate_test_range[0],
-                   false_positive_rate_test_range[0], group_size_range[0]])
-    ub = np.array([prob_sick_range[1], success_rate_test_range[1],
-                   false_positive_rate_test_range[1], group_size_range[1]])
-    lb = lb[:dim]
-    ub = ub[:dim]
-    # 1 + how much levels the boundary is coarser than the main axes,
-    # 0 means one level finer, 1 means same level, 2 means one level coarser, etc.
-    boundaryLevel = 2
-
-    return gridType, dim, degree, test_strategy, qoi, name, sample_size, num_daily_tests,\
-        test_duration, num_simultaneous_tests, number_of_instances, lb, ub, boundaryLevel
+# default plot font sizes
+SMALL_SIZE = 12
+MEDIUM_SIZE = 14
+BIGGER_SIZE = 16
+plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
+plt.rc('axes', titlesize=SMALL_SIZE)     # fontsize of the axes title
+plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
+plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
+plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 
 
 def getName(refineType, test_strategy, qoi, dim, degree, level, numPoints):
@@ -115,8 +82,9 @@ def calculate_error(reSurf, qoi, sample_size, numMCPoints, test_strategy, dim, n
     nrmse = 0
 
     # TEMPORARY
-    #number_of_instances = 20
-    #sample_size = 200000
+    number_of_instances = 10
+    sample_size = 100000  # 100000
+    print(f'Overwriting error sample size to {sample_size} nad instances to {number_of_instances}')
 
     error_reference_data_file = f'precalc/values/mc{numMCPoints}_{test_strategy}_{dim}dim_{number_of_instances}repetitions_{int(sample_size/1000)}kpop.pkl'
     with open(error_reference_data_file, 'rb') as fp:
@@ -233,9 +201,10 @@ if __name__ == "__main__":
     saveReSurf = True
     calcError = True
     plotError = calcError
+    plotNoise = plotError
     numMCPoints = 100
 
-    levels = [1, 2, 3]
+    levels = [1, 2, 3, 4]  # , 5 , 6, 7]
     numPointsArray = []  # [10, 100, 200, 400, 800, 1200, 1500]
 
     initialLevel = 1    # initial level
@@ -247,11 +216,11 @@ if __name__ == "__main__":
         boundaryLevel = getSetup()
     test_strategies = [
         'individual-testing',
-        # 'two-stage-testing',
-        # 'binary-splitting',
-        # 'RBS',
-        # 'purim',
-        # 'sobel'
+        'two-stage-testing',
+        'binary-splitting',
+        'RBS',
+        'purim',
+        'sobel'
     ]
     qois = [
         'ppt',
@@ -292,7 +261,7 @@ if __name__ == "__main__":
         colors = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9']
 
         if len(levels) > 0:
-            plt.figure(figsize=(12, 8))
+            plt.figure(figsize=(8, 6))
             plt.title('regular')
             plotindex = 1
             for j, qoi in enumerate(qois):
@@ -300,19 +269,29 @@ if __name__ == "__main__":
                     plt.subplot(2, 2, plotindex)
                     plotindex += 1
                 for i, test_strategy in enumerate(test_strategies):
-                    # plt.plot(regular_gridSizes[i, j, :], regular_l2errors[i, j, :],
-                    #          label=test_strategy, marker=markers[i], color=colors[i])
-                    plt.plot(regular_gridSizes[i, j, :], regular_nrmses[i, j, :],
+                    plt.plot(regular_gridSizes[i, j, :], regular_l2errors[i, j, :],
                              label=test_strategy, marker=markers[i], color=colors[i])
+                    # plt.plot(regular_gridSizes[i, j, :], regular_nrmses[i, j, :],
+                    #          label=test_strategy, marker=markers[i], color=colors[i])
                     plt.legend()
+
+                    if plotNoise:
+                        numNoisePoints = 100
+                        number_outer_repetitions = 10
+                        noise = stochastic_noise(test_strategy, qoi, sample_size, number_of_instances,
+                                                 numNoisePoints, number_outer_repetitions)
+                        plt.plot(regular_gridSizes[i, j, :], [noise]*len(levels),
+                                 '--', color=colors[i])  # , marker=markers[i])
+
                 plt.title(qoi)
                 plt.xlabel('num regular grid points')
-                plt.ylabel('NRMSE')
-                #plt.ylabel('L2 error')
+                # plt.ylabel('NRMSE')
+                plt.ylabel('L2 error')
                 plt.gca().set_yscale('log')
+                plt.ylim([1e-3, 1])
 
         if len(numPointsArray) > 0:
-            plt.figure(figsize=(12, 8))
+            plt.figure(figsize=(8, 6))
             plt.title('adaptive')
             plotindex = 1
             for j, qoi in enumerate(qois):
@@ -331,4 +310,5 @@ if __name__ == "__main__":
                 #plt.ylabel('L2 error')
                 plt.gca().set_yscale('log')
 
+        plt.tight_layout()
         plt.show()

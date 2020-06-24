@@ -1,6 +1,6 @@
 import sys
 import numpy as np
-from sgpp_create_response_surface import getSetup
+from setup import getSetup
 import pickle
 import logging
 from sgpp_precalc_parallel import precalc_parallel
@@ -12,10 +12,10 @@ gridType, dim, degree, _, qoi, name, sample_size, num_daily_tests, \
     boundaryLevel = getSetup()
 
 test_strategies = [
-    'individual-testing',
+    # 'individual-testing',
     # 'two-stage-testing',
     # 'binary-splitting',
-    # 'RBS',
+    'RBS',
     # 'purim',
     # 'sobel'
 ]

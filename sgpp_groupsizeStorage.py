@@ -1,7 +1,7 @@
 import numpy as np
 import pickle
 import logging
-from sgpp_create_response_surface import getSetup
+from setup import getSetup
 from sgpp_simStorage import sgpp_simStorage
 from sgpp_precalc_parallel import calculate_missing_values
 

@@ -1,6 +1,6 @@
 import sys
 import numpy as np
-from sgpp_create_response_surface import getSetup
+from setup import getSetup
 import pickle
 import logging
 from sgpp_precalc_parallel import precalc_parallel

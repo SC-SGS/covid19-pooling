@@ -5,7 +5,8 @@ import pickle
 import time
 from Statistics import Corona_Simulation_Statistics
 import matplotlib.pyplot as plt
-from sgpp_create_response_surface import getSetup, load_response_Surface
+from sgpp_create_response_surface import load_response_Surface
+from setup import getSetup
 from sgpp_simStorage import sgpp_simStorage
 from sgpp_precalc_parallel import calculate_missing_values
 

@@ -2,7 +2,8 @@ import matplotlib.pyplot as plt
 import pysgpp
 import numpy as np
 import pickle
-from sgpp_create_response_surface import getSetup, load_response_Surface
+from sgpp_create_response_surface import load_response_Surface
+from setup import getSetup
 from sgpp_simStorage import sgpp_simStorage
 
 # load precalculated response surface

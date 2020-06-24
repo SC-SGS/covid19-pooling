@@ -2,7 +2,7 @@ import pickle
 import pysgpp
 import sys
 import numpy as np
-from sgpp_create_response_surface import getSetup
+from setup import getSetup
 from sgpp_simStorage import sgpp_simStorage, objFuncSGpp, generateKey
 from sgpp_precalc_parallel import calculate_missing_values
 

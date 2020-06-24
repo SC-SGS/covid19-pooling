@@ -1,6 +1,6 @@
 import pysgpp
 import numpy as np
-from sgpp_create_response_surface import getSetup
+from setup import getSetup
 from argparse import ArgumentParser
 from sgpp_precalc_parallel import calculate_missing_values
 
