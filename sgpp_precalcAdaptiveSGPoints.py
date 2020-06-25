@@ -55,7 +55,7 @@ if __name__ == "__main__":
 
     initialLevel = 1
     numRefine = 10
-    maxPoints = 600  # 2500
+    maxPoints = 1500  # 2500
     verbose = False
 
     num_total_calculations = 0
