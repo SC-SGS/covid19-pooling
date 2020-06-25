@@ -43,19 +43,19 @@ if __name__ == "__main__":
         boundaryLevel = getSetup()
 
     test_strategies = [
-        'individual-testing',
+        # 'individual-testing',
         'two-stage-testing',
-        'binary-splitting',
-        'RBS',
-        'purim',
-        'sobel'
+        # 'binary-splitting',
+        # 'RBS',
+        # 'purim',
+        # 'sobel'
     ]
     qoi = 'ppt'
     #qoi = 'time'
 
     initialLevel = 1
     numRefine = 10
-    maxPoints = 1500  # 2500
+    maxPoints = 1500
     verbose = False
 
     num_total_calculations = 0

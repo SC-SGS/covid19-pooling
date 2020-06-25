@@ -13,9 +13,9 @@ gridType, dim, degree, _, qoi, name, sample_size, num_daily_tests, \
 
 test_strategies = [
     # 'individual-testing',
-    # 'two-stage-testing',
+    'two-stage-testing',
     # 'binary-splitting',
-    'RBS',
+    # 'RBS',
     # 'purim',
     # 'sobel'
 ]

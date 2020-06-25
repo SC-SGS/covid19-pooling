@@ -29,7 +29,7 @@ test_strategies = [
 ]
 markers = ['o', '*', '^', '+', 's', 'd', 'v', '<', '>']
 colors = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9']
-pop_rep = [[1000, 1], [1000, 10], [10000, 1], [10000, 5],  [10000, 10], [100000, 1]]
+pop_rep = [[1000, 1], [1000, 10], [10000, 1], [10000, 5],  [10000, 10], [100000, 1], [100000, 10]]
 X = range(len(pop_rep))
 for i, test_strategy in enumerate(test_strategies):
     noises = np.zeros(len(pop_rep))

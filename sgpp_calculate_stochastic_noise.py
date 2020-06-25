@@ -81,8 +81,10 @@ def stochastic_noise(test_strategy, qoi, sample_size, number_of_instances, numMC
              worst_case_number_groupwise_tests, e_number_sick_people, sd_number_sick_people] = results_dict[key]
             if qoi == 'ppt':
                 results[i, j] = e_num_confirmed_per_test
+            elif qoi == 'time':
+                results[i, j] = e_time
             else:
-                warnings.warn('noise function for this qoi does not yet exist')
+                print(f'noise function for qoi {qoi} does not yet exist')
 
     pointwise_results = np.zeros((numMCPoints, 3))
     for j in range(numMCPoints):
@@ -91,7 +93,8 @@ def stochastic_noise(test_strategy, qoi, sample_size, number_of_instances, numMC
         pointwise_results[j, 2] = np.std(results[:, j])
 
     worst_diff = np.max(pointwise_results[:, 0])
-    #expected_std = np.mean(pointwise_results[:, 2])
+    average_diff = np.mean(pointwise_results[:, 0])
+    expected_std = np.mean(pointwise_results[:, 2])
     # print(f"{test_strategy}: worst diff {worst_diff}    expected std {expected_std}")
 
     return worst_diff

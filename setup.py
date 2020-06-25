@@ -35,8 +35,10 @@ def getSetup():
     number_of_instances = 10
 
     prob_sick_range = [0.001, 0.3]
-    success_rate_test_range = [0.5, 1.0]  # [0.3, 0.99]
-    false_positive_rate_test_range = [0.0, 0.2]  # [0.01, 0.2]
+    success_rate_test_range = [0.5, 1.0]
+    #success_rate_test_range = [0.5, 0.99]
+    false_positive_rate_test_range = [0.0, 0.2]
+    #false_positive_rate_test_range = [0.01, 0.2]
     group_size_range = [1, 32]
     lb = np.array([prob_sick_range[0], success_rate_test_range[0],
                    false_positive_rate_test_range[0], group_size_range[0]])

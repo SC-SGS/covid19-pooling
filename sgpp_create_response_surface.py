@@ -83,8 +83,8 @@ def calculate_error(reSurf, qoi, sample_size, numMCPoints, test_strategy, dim, n
 
     # TEMPORARY
     number_of_instances = 10
-    sample_size = 100000  # 100000
-    print(f'Overwriting error sample size to {sample_size} nad instances to {number_of_instances}')
+    sample_size = 100000
+    print(f'Overwriting error sample size to {sample_size} and instances to {number_of_instances}')
 
     error_reference_data_file = f'precalc/values/mc{numMCPoints}_{test_strategy}_{dim}dim_{number_of_instances}repetitions_{int(sample_size/1000)}kpop.pkl'
     with open(error_reference_data_file, 'rb') as fp:
@@ -140,11 +140,11 @@ def calculate_error(reSurf, qoi, sample_size, numMCPoints, test_strategy, dim, n
         false_positive_rate = key[2]
         group_size = key[3]
 
-        # if group_size in [1, 32]:
-        #     point = [prob_sick, success_rate_test, false_positive_rate, group_size]
-        # else:
-        #     point = [prob_sick, success_rate_test, false_positive_rate, group_size+1]
-        point = [prob_sick, success_rate_test, false_positive_rate, group_size]
+        if group_size in [1, 32]:
+            point = [prob_sick, success_rate_test, false_positive_rate, group_size]
+        else:
+            point = [prob_sick, success_rate_test, false_positive_rate, group_size+1]
+        #point = [prob_sick, success_rate_test, false_positive_rate, group_size]
         point = pysgpp.DataVector(point[:dim])
 
         reSurf_value = reSurf.eval(point)
@@ -155,9 +155,9 @@ def calculate_error(reSurf, qoi, sample_size, numMCPoints, test_strategy, dim, n
             relative_worst_error = worst_error/np.abs(true_value)
             worst_key = key
 
-        #print(f'{key}    {true_value}    {reSurf_value}     {np.abs(true_value-reSurf_value)}')
-        #error_overview[i, 0:5] = key
-        #error_overview[i, 5] = np.abs(true_value-reSurf_value)
+        # print(f'{key}    {true_value}    {reSurf_value}     {np.abs(true_value-reSurf_value)}')
+        # error_overview[i, 0:5] = key
+        # error_overview[i, 5] = np.abs(true_value-reSurf_value)
 
     # np.set_printoptions(linewidth=150)
     # print(error_overview)
@@ -198,17 +198,18 @@ def auxiliary(refineType, test_strategies, qois, sample_size, num_daily_tests, t
 
 
 if __name__ == "__main__":
-    saveReSurf = True
+    saveReSurf = False
     calcError = True
     plotError = calcError
+    saveFig = plotError
     plotNoise = plotError
     numMCPoints = 100
 
-    levels = [1, 2, 3, 4]  # , 5 , 6, 7]
-    numPointsArray = []  # [10, 100, 200, 400, 800, 1200, 1500]
+    levels = [1, 2, 3, 4]  # , 5]
+    numPointsArray = []  # [10, 100, 200, 400,  800, 1200, 1500]
 
     initialLevel = 1    # initial level
-    numRefine = 10       # number of grid points refined in each step
+    numRefine = 10  # number of grid points refined in each step
     verbose = False  # verbosity of subroutines
 
     gridType, dim, degree, _, _, name, sample_size, num_daily_tests, \
@@ -260,6 +261,7 @@ if __name__ == "__main__":
         markers = ['o', '*', '^', '+', 's', 'd', 'v', '<', '>']
         colors = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9']
 
+        # REGULAR PLOTTING
         if len(levels) > 0:
             plt.figure(figsize=(8, 6))
             plt.title('regular')
@@ -269,10 +271,10 @@ if __name__ == "__main__":
                     plt.subplot(2, 2, plotindex)
                     plotindex += 1
                 for i, test_strategy in enumerate(test_strategies):
-                    plt.plot(regular_gridSizes[i, j, :], regular_l2errors[i, j, :],
-                             label=test_strategy, marker=markers[i], color=colors[i])
-                    # plt.plot(regular_gridSizes[i, j, :], regular_nrmses[i, j, :],
+                    # plt.plot(regular_gridSizes[i, j, :], regular_l2errors[i, j, :],
                     #          label=test_strategy, marker=markers[i], color=colors[i])
+                    plt.plot(regular_gridSizes[i, j, :], regular_nrmses[i, j, :],
+                             label=test_strategy, marker=markers[i], color=colors[i])
                     plt.legend()
 
                     if plotNoise:
@@ -280,16 +282,24 @@ if __name__ == "__main__":
                         number_outer_repetitions = 10
                         noise = stochastic_noise(test_strategy, qoi, sample_size, number_of_instances,
                                                  numNoisePoints, number_outer_repetitions)
-                        plt.plot(regular_gridSizes[i, j, :], [noise]*len(levels),
-                                 '--', color=colors[i])  # , marker=markers[i])
+                        print(noise)
+                        plt.plot(regular_gridSizes[i, j, :], [noise]*len(levels), '--', color=colors[i])
 
                 plt.title(qoi)
                 plt.xlabel('num regular grid points')
-                # plt.ylabel('NRMSE')
-                plt.ylabel('L2 error')
+                plt.ylabel('NRMSE')
+                # plt.ylabel('L2 error')
                 plt.gca().set_yscale('log')
                 plt.ylim([1e-3, 1])
+            if saveFig:
+                folder = '/home/rehmemk/git/covid19-pooling/plots/reSurf_convergence'
+                figname = f'dim{dim}_deg{degree}_{int(sample_size/1000)}k_{number_of_instances}rep_regular{levels[-1]}.pdf'
+                figpath = os.path.join(folder, figname)
+                plt.tight_layout()
+                plt.savefig(figpath)
+                print(f'saved figure as {figpath}')
 
+        # ADAPTIVE PLOTTING
         if len(numPointsArray) > 0:
             plt.figure(figsize=(8, 6))
             plt.title('adaptive')
@@ -304,11 +314,29 @@ if __name__ == "__main__":
                     plt.plot(adaptive_gridSizes[i, j, :], adaptive_nrmses[i, j, :],
                              label=test_strategy, marker=markers[i], color=colors[i])
                     plt.legend()
+
+                    if plotNoise:
+                        numNoisePoints = 100
+                        number_outer_repetitions = 10
+                        noise = stochastic_noise(test_strategy, qoi, sample_size, number_of_instances,
+                                                 numNoisePoints, number_outer_repetitions)
+                        plt.plot(adaptive_gridSizes[i, j, :], [noise]*len(numPointsArray),
+                                 '--', color=colors[i])  # , marker=markers[i])
+
                 plt.title(qoi)
                 plt.xlabel('num adaptive grid points')
                 plt.ylabel('NRMSE')
                 #plt.ylabel('L2 error')
                 plt.gca().set_yscale('log')
+                plt.ylim([1e-3, 1])
+            if saveFig:
+                folder = '/home/rehmemk/git/covid19-pooling/plots/reSurf_convergence'
+                figname = f'dim{dim}_deg{degree}_{int(sample_size/1000)}k_{number_of_instances}rep_adaptive{numPointsArray[-1]}.pdf'
+                figpath = os.path.join(folder, figname)
+                plt.tight_layout()
+                plt.savefig(figpath)
+                print(f'saved figure as {figpath}')
 
-        plt.tight_layout()
-        plt.show()
+        if not saveFig:
+            plt.tight_layout()
+            plt.show()
