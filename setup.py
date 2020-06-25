@@ -32,7 +32,7 @@ def getSetup():
     num_daily_tests = int(sample_size/100)  # 10000
     test_duration = 5
     num_simultaneous_tests = int(num_daily_tests*test_duration/24.0)
-    number_of_instances = 1
+    number_of_instances = 10
 
     prob_sick_range = [0.001, 0.3]
     success_rate_test_range = [0.5, 1.0]  # [0.3, 0.99]

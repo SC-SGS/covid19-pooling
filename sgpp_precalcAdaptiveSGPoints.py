@@ -55,7 +55,7 @@ if __name__ == "__main__":
 
     initialLevel = 1
     numRefine = 10
-    maxPoints = 1600  # 2500
+    maxPoints = 600  # 2500
     verbose = False
 
     num_total_calculations = 0
@@ -68,7 +68,8 @@ if __name__ == "__main__":
             precalculatedValues = pickle.load(fp)
         #print(f'loaded precalculated evaluations from {precalcValuesFileName}')
 
-        f = sgpp_simStorage(dim, test_strategy, lb, ub, number_of_instances)
+        f = sgpp_simStorage(dim, test_strategy, lb, ub, number_of_instances,
+                            sample_size, num_daily_tests, test_duration)
         objFunc = objFuncSGpp(f, qoi)
         default_parameters = f.default_parameters
 
