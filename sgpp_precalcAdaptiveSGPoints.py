@@ -43,12 +43,12 @@ if __name__ == "__main__":
         boundaryLevel = getSetup()
 
     test_strategies = [
-        # 'individual-testing',
+        'individual-testing',
         'two-stage-testing',
-        # 'binary-splitting',
-        # 'RBS',
-        # 'purim',
-        # 'sobel'
+        'binary-splitting',
+        'RBS',
+        'purim',
+        'sobel'
     ]
     qoi = 'ppt'
     #qoi = 'time'

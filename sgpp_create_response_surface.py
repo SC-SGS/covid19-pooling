@@ -34,6 +34,7 @@ def getName(refineType, test_strategy, qoi, dim, degree, level, numPoints):
 
 def create_reSurf(objFunc, lb, ub, gridType, degree, boundaryLevel, refineType, level, numPoints,
                   initialLevel, numRefine, verbose):
+    dim = objFunc.getDim()
     reSurf = pysgpp.SplineResponseSurface(objFunc, pysgpp.DataVector(lb[:dim]),
                                           pysgpp.DataVector(ub[:dim]), pysgpp.Grid.stringToGridType(gridType),
                                           degree, boundaryLevel)
@@ -175,8 +176,8 @@ def calculate_error(reSurf, qoi, sample_size, numMCPoints, test_strategy, dim, n
 
 
 def auxiliary(refineType, test_strategies, qois, sample_size, num_daily_tests, test_duration, dim,
-              degree, lb, ub, level=1, numPoints=1,
-              initialLevel=1, numRefine=1, verbose=False):
+              number_of_instances, gridType, degree, boundaryLevel, lb, ub, level=1, numPoints=1,
+              initialLevel=1, numRefine=1, verbose=False, calcError=False, numMCPoints=100, saveReSurf=False):
     l2errors = np.zeros((len(test_strategies), len(qois)))
     nrmses = np.zeros((len(test_strategies), len(qois)))
     gridSizes = np.zeros((len(test_strategies), len(qois)))
@@ -201,12 +202,12 @@ if __name__ == "__main__":
     saveReSurf = False
     calcError = True
     plotError = calcError
-    saveFig = plotError
+    saveFig = False  # plotError
     plotNoise = plotError
-    numMCPoints = 100
+    numMCPoints = 1000
 
-    levels = [1, 2, 3, 4]  # , 5]
-    numPointsArray = []  # [10, 100, 200, 400,  800, 1200, 1500]
+    levels = []  # [1, 2, 3, 4]  # , 5]
+    numPointsArray = [10, 100, 200, 400,  800, 1200, 1500]
 
     initialLevel = 1    # initial level
     numRefine = 10  # number of grid points refined in each step
@@ -246,7 +247,8 @@ if __name__ == "__main__":
         print(f'level {level}')
         regular_l2errors[:, :, l], regular_nrmses[:, :, l], regular_gridSizes[:, :, l] = \
             auxiliary(refineType, test_strategies, qois, sample_size,
-                      num_daily_tests, test_duration, dim, degree, lb, ub, level)
+                      num_daily_tests, test_duration, dim, number_of_instances, gridType, degree,
+                      boundaryLevel, lb, ub, level, calcError, numMCPoints, saveReSurf)
 
     refineType = 'adaptive'
     print('adaptive')
@@ -254,8 +256,9 @@ if __name__ == "__main__":
         print(f'num Points {numPoints}')
         adaptive_l2errors[:, :, l], adaptive_nrmses[:, :, l], adaptive_gridSizes[:, :, l]\
             = auxiliary(refineType, test_strategies, qois, sample_size, num_daily_tests,
-                        test_duration, dim, degree, lb, ub, level, numPoints,
-                        initialLevel, numRefine, verbose)
+                        test_duration, dim, number_of_instances,  gridType, degree, boundaryLevel,
+                        lb, ub, level, numPoints, initialLevel, numRefine, verbose, calcError,
+                        numMCPoints, saveReSurf)
 
     if calcError and plotError:
         markers = ['o', '*', '^', '+', 's', 'd', 'v', '<', '>']
