@@ -83,6 +83,10 @@ def stochastic_noise(test_strategy, qoi, sample_size, number_of_instances, numMC
                 results[i, j] = e_num_confirmed_per_test
             elif qoi == 'time':
                 results[i, j] = e_time
+            elif qoi == 'num_confirmed_sick_individuals':
+                results[i, j] = e_num_confirmed_sick_individuals
+            elif qoi == 'num_sent_to_quarantine':
+                results[i, j] = e_num_sent_to_quarantine
             else:
                 print(f'noise function for qoi {qoi} does not yet exist')
 

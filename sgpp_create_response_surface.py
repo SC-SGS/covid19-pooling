@@ -24,12 +24,22 @@ plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
 plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 
 
-def getName(refineType, test_strategy, qoi, dim, degree, level, numPoints):
+def getName(refineType, test_strategy, qoi, dim, degree, level, numPoints, sample_size,
+            number_of_instances):
     if refineType == 'regular':
-        name = f'{test_strategy}_{qoi}_dim{dim}_deg{degree}_level{level}'
+        name = f'{test_strategy}_{qoi}_{int(sample_size/1000)}k{number_of_instances}_dim{dim}_deg{degree}_level{level}'
     elif refineType == 'adaptive':
-        name = f'{test_strategy}_{qoi}_dim{dim}_deg{degree}_adaptive{numPoints}'
+        name = f'{test_strategy}_{qoi}_{int(sample_size/1000)}k{number_of_instances}_dim{dim}_deg{degree}_adaptive{numPoints}'
     return name
+
+
+def getReSurfEvaluationPoint(prob_sick, success_rate_test, false_positive_rate, group_size):
+    if group_size in [1, 32]:
+        point = [prob_sick, success_rate_test, false_positive_rate, group_size]
+    else:
+        point = [prob_sick, success_rate_test, false_positive_rate, group_size+1]
+    # point = [prob_sick, success_rate_test, false_positive_rate, group_size]
+    return point
 
 
 def create_reSurf(objFunc, lb, ub, gridType, degree, boundaryLevel, refineType, level, numPoints,
@@ -49,8 +59,10 @@ def create_reSurf(objFunc, lb, ub, gridType, degree, boundaryLevel, refineType, 
     return reSurf
 
 
-def save_reSurf(reSurf, refineType, test_strategy, qoi, dim, degree, level, numPoints):
-    reSurfName = getName(refineType, test_strategy, qoi, dim, degree, level, numPoints)
+def save_reSurf(reSurf, refineType, test_strategy, qoi, dim, degree, level, numPoints, sample_size,
+                number_of_instances):
+    reSurfName = getName(refineType, test_strategy, qoi, dim, degree, level, numPoints, sample_size,
+                         number_of_instances)
     path = 'precalc/reSurf'
     # serialize the resposne surface
     # gridStr = reSurf.serializeGrid()
@@ -66,8 +78,10 @@ def save_reSurf(reSurf, refineType, test_strategy, qoi, dim, degree, level, numP
     print(f'saved response surface as {path}/{reSurfName}')
 
 
-def load_response_Surface(refineType, test_strategy, qoi, dim, degree, level, numPoints, lb, ub):
-    name = getName(refineType, test_strategy, qoi, dim, degree, level, numPoints)
+def load_response_Surface(refineType, test_strategy, qoi, dim, degree, level, numPoints, lb, ub,
+                          sample_size, number_of_instances):
+    name = getName(refineType, test_strategy, qoi, dim, degree, level, numPoints, sample_size,
+                   number_of_instances)
 
     dummyCoeff = np.loadtxt(f'precalc/reSurf/np_coeff_{name}.dat')
     coefficients = pysgpp.DataVector(dummyCoeff)
@@ -141,11 +155,7 @@ def calculate_error(reSurf, qoi, sample_size, numMCPoints, test_strategy, dim, n
         false_positive_rate = key[2]
         group_size = key[3]
 
-        if group_size in [1, 32]:
-            point = [prob_sick, success_rate_test, false_positive_rate, group_size]
-        else:
-            point = [prob_sick, success_rate_test, false_positive_rate, group_size+1]
-        #point = [prob_sick, success_rate_test, false_positive_rate, group_size]
+        point = getReSurfEvaluationPoint(prob_sick, success_rate_test, false_positive_rate, group_size)
         point = pysgpp.DataVector(point[:dim])
 
         reSurf_value = reSurf.eval(point)
@@ -194,20 +204,21 @@ def auxiliary(refineType, test_strategies, qois, sample_size, num_daily_tests, t
                     reSurf, qoi, sample_size, numMCPoints, test_strategy, dim, number_of_instances)
                 gridSizes[i, j] = reSurf.getSize()
             if saveReSurf:
-                save_reSurf(reSurf, refineType, test_strategy, qoi, dim, degree, level, numPoints)
+                save_reSurf(reSurf, refineType, test_strategy, qoi, dim, degree, level, numPoints,
+                            sample_size, number_of_instances)
     return l2errors, nrmses, gridSizes
 
 
 if __name__ == "__main__":
-    saveReSurf = False
+    saveReSurf = True
     calcError = True
     plotError = calcError
-    saveFig = False  # plotError
     plotNoise = plotError
+    saveFig = False  # plotError
     numMCPoints = 1000
 
     levels = []  # [1, 2, 3, 4]  # , 5]
-    numPointsArray = [10, 100, 200, 400,  800, 1200, 1500]
+    numPointsArray = [1500]  # [10, 100, 200, 400, 1000, 1500]
 
     initialLevel = 1    # initial level
     numRefine = 10  # number of grid points refined in each step
@@ -227,7 +238,7 @@ if __name__ == "__main__":
     qois = [
         'ppt',
         # 'sd-ppt',
-        # 'time',
+        'time',
         # 'sd-time'
     ]
 
@@ -240,15 +251,17 @@ if __name__ == "__main__":
     adaptive_gridSizes = np.zeros((len(test_strategies), len(qois), len(numPointsArray)))
 
     level = 'dummy'
+    numPoints = 'dummy'
 
     refineType = 'regular'
     print('regular')
     for l, level in enumerate(levels):
         print(f'level {level}')
-        regular_l2errors[:, :, l], regular_nrmses[:, :, l], regular_gridSizes[:, :, l] = \
-            auxiliary(refineType, test_strategies, qois, sample_size,
-                      num_daily_tests, test_duration, dim, number_of_instances, gridType, degree,
-                      boundaryLevel, lb, ub, level, calcError, numMCPoints, saveReSurf)
+        regular_l2errors[:, :, l], regular_nrmses[:, :, l], regular_gridSizes[:, :, l] \
+            = auxiliary(refineType, test_strategies, qois, sample_size, num_daily_tests,
+                        test_duration, dim, number_of_instances,  gridType, degree, boundaryLevel,
+                        lb, ub, level, numPoints, initialLevel, numRefine, verbose, calcError,
+                        numMCPoints, saveReSurf)
 
     refineType = 'adaptive'
     print('adaptive')
@@ -293,7 +306,7 @@ if __name__ == "__main__":
                 plt.ylabel('NRMSE')
                 # plt.ylabel('L2 error')
                 plt.gca().set_yscale('log')
-                plt.ylim([1e-3, 1])
+                #plt.ylim([1e-3, 1])
             if saveFig:
                 folder = '/home/rehmemk/git/covid19-pooling/plots/reSurf_convergence'
                 figname = f'dim{dim}_deg{degree}_{int(sample_size/1000)}k_{number_of_instances}rep_regular{levels[-1]}.pdf'
@@ -331,7 +344,7 @@ if __name__ == "__main__":
                 plt.ylabel('NRMSE')
                 #plt.ylabel('L2 error')
                 plt.gca().set_yscale('log')
-                plt.ylim([1e-3, 1])
+                #plt.ylim([1e-3, 1])
             if saveFig:
                 folder = '/home/rehmemk/git/covid19-pooling/plots/reSurf_convergence'
                 figname = f'dim{dim}_deg{degree}_{int(sample_size/1000)}k_{number_of_instances}rep_adaptive{numPointsArray[-1]}.pdf'

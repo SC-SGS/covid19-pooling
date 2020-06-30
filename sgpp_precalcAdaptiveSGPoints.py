@@ -50,8 +50,8 @@ if __name__ == "__main__":
         'purim',
         'sobel'
     ]
-    qoi = 'ppt'
-    #qoi = 'time'
+    #qoi = 'ppt'
+    qoi = 'time'
 
     initialLevel = 1
     numRefine = 10
