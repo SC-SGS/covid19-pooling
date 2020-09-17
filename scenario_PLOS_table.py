@@ -128,7 +128,7 @@ def calculation():
     # use scale_factor_pop = 10 for the original results in the paper
     # use scale_factor_pop = 100 for much faster calculation and  little loss of accuracy
     countries = {}
-    countries['DE'] = {'population': 10000, 'tests_per_day': 10000,
+    countries['DE'] = {'population': 10000000, 'tests_per_day': 100000,
                        'scale_factor_pop': 1, 'scale_factor_test': 1}
 
     num_countries = len(countries.keys())
