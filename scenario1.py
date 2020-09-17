@@ -31,7 +31,8 @@ plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 
 # name for the data dump and plots
 def getName(scale_factor_pop, scale_factor_test, success_rate_test=0.99):
-    name = 'scenario1_scalepop{}_scaletest{}'.format(scale_factor_pop, scale_factor_test)
+    # added 'NEW' at beginning for new data as of September 2020
+    name = 'NEW_scenario1_scalepop{}_scaletest{}'.format(scale_factor_pop, scale_factor_test)
     if success_rate_test != 0.99:
         name += '_{}'.format(success_rate_test)
     return name
@@ -45,12 +46,12 @@ def worker(return_dict, sample_size, prob_sick, success_rate_test, false_posivit
     performs the same test tests_repetitions many times and returns expected valkues and standard deviations
     '''
 
-    stat_test = Corona_Simulation_Statistics(sample_size, prob_sick, success_rate_test,
+    stat_test = Corona_Simulation_Statistics(prob_sick, success_rate_test,
                                              false_posivite_rate, test_strategy,
-                                             num_simultaneous_tests, test_duration, group_size,
+                                             test_duration, group_size,
                                              tests_repetitions, test_result_decision_strategy,
                                              scale_factor_pop)
-    stat_test.statistical_analysis(number_of_instances)
+    stat_test.statistical_analysis(sample_size, num_simultaneous_tests, number_of_instances)
     print('Calculated {} for {} prob sick {}'.format(test_strategy, country, prob_sick))
     print('scaled to {} population and {} simulataneous tests\n'.format(sample_size, num_simultaneous_tests))
     # gather results
@@ -126,16 +127,34 @@ def calculation():
     # use scale_factor_pop = 10 for the original results in the paper
     # use scale_factor_pop = 100 for much faster calculation and  little loss of accuracy
     countries = {}
-    countries['UK'] = {'population': 67890000, 'tests_per_day': 12000,
-                       'scale_factor_pop': 10, 'scale_factor_test': 100}
-    countries['US'] = {'population': 328240000, 'tests_per_day': 146000,
-                       'scale_factor_pop': 10, 'scale_factor_test': 100}
-    countries['SG'] = {'population': 5640000, 'tests_per_day': 2900,
-                       'scale_factor_pop': 10, 'scale_factor_test': 10}
-    countries['IT'] = {'population': 60310000, 'tests_per_day': 46000,
-                       'scale_factor_pop': 10, 'scale_factor_test': 100}
-    countries['DE'] = {'population': 83150000, 'tests_per_day': 123000,
-                       'scale_factor_pop': 10, 'scale_factor_test': 100}
+
+    # as of April 2020
+    # countries['UK'] = {'population': 67890000, 'tests_per_day': 12000,
+    #                    'scale_factor_pop': 10, 'scale_factor_test': 100}
+    # countries['US'] = {'population': 328240000, 'tests_per_day': 146000,
+    #                    'scale_factor_pop': 10, 'scale_factor_test': 100}
+    # countries['SG'] = {'population': 5640000, 'tests_per_day': 2900,
+    #                    'scale_factor_pop': 10, 'scale_factor_test': 10}
+    # countries['IT'] = {'population': 60310000, 'tests_per_day': 46000,
+    #                    'scale_factor_pop': 10, 'scale_factor_test': 100}
+    # countries['DE'] = {'population': 83150000, 'tests_per_day': 123000,
+    #                    'scale_factor_pop': 10, 'scale_factor_test': 100}
+
+    # as of September 2020
+    countries['BR'] = {'population': 209500000, 'tests_per_day': 71230,
+                       'scale_factor_pop': 100, 'scale_factor_test': 100}
+    countries['ID'] = {'population': 1353000000, 'tests_per_day': 1028280,
+                       'scale_factor_pop': 100, 'scale_factor_test': 100}
+    countries['IT'] = {'population': 60310000, 'tests_per_day': 54882,
+                       'scale_factor_pop': 100, 'scale_factor_test': 100}
+    countries['SG'] = {'population': 5640000, 'tests_per_day': 5414,
+                       'scale_factor_pop': 100, 'scale_factor_test': 10}
+    countries['US'] = {'population': 328240000, 'tests_per_day': 720283,
+                       'scale_factor_pop': 100, 'scale_factor_test': 100}
+    countries['DE'] = {'population': 83150000, 'tests_per_day': 219092,
+                       'scale_factor_pop': 100, 'scale_factor_test': 100}
+    countries['UK'] = {'population': 67890000, 'tests_per_day': 221192,
+                       'scale_factor_pop': 100, 'scale_factor_test': 100}
 
     num_countries = len(countries.keys())
 
@@ -360,11 +379,11 @@ if __name__ == "__main__":
         filename = calculation()
     else:
         # or use precalculated data
-        scale_factor_pop = 10
+        scale_factor_pop = 100
         scale_factor_test = 100
         filename = getName(scale_factor_pop, scale_factor_test)
 
-    saveFig = 1
+    saveFig = 0
     prob_sick_plot_index = 4  # 4 -> 0.01
     # out of [0.001, 0.0025, 0.005, 0.0075, 0.01, 0.025, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3]
     plotting(filename, prob_sick_plot_index, saveFig)
