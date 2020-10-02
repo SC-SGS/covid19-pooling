@@ -1,7 +1,6 @@
 # covid19-pooling
 
-This repo will soon contain the code for
-
-"EVALUATION OF POOL-BASED TESTING APPROACHES TO ENABLE POPULATION-WIDE SCREENING FOR COVID-19"
+This branch contains the additional code used for creating the surrogate behind the [website](https://ipvs.informatik.uni-stuttgart.de/sgs/cgi-bin/JA/covid19/).
+It is based on  [SG++](https://github.com/SGpp/SGpp) a sparse grid library
 
 by Timo de Wolff, Dirk Pflüger, Michael Rehme,Janin Heuer, and Martin-Immanuel Bittner
