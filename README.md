@@ -12,6 +12,7 @@ We provide a [website](https://ipvs.informatik.uni-stuttgart.de/sgs/cgi-bin/JA/c
 
 Execute scenario1.py to recreate the plots of the expected time to test a population in days and expected number of identified cases per test.
 Execute accuracies_and_bar_plots to recreate the bar plots.
+Execute data/eval_PLOS.py to reccreate the table of the 100,000 tests for a population of 10 million scenario.
 
 For more information on the surrogate used for the website see branch 'sg_surrogate'
 
