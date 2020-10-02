@@ -283,10 +283,10 @@ def plotting(filename, saveFig=0):
 
 if __name__ == "__main__":
     # either do calculations
-    filename = calculation()
+    #filename = calculation()
 
     # or use precalculated data
-    #filename = getName()
+    filename = getName(success_rate_test=0.99)
 
     saveFig = 0
     plotting(filename, saveFig)

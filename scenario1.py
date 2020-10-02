@@ -372,7 +372,7 @@ def plotting(filename, prob_sick_plot_index, saveFig=0):
 
 
 if __name__ == "__main__":
-    recalculate = True
+    recalculate = False
     if recalculate:
         # either do calculations
         filename = calculation()
