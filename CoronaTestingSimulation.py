@@ -67,7 +67,7 @@ class Corona_Simulation(object):
         self.success_rate = 0
         self.number_false_positives = 0
         self.false_posivite_rate = 0
-        self.number_of_groups = 0 # counts the number of groups processed so far
+        self.number_of_groups = 0  # counts the number of groups processed so far
         self.VERBOSE = True
 
     # auxiliary routine for binary_splitting_time_dependent

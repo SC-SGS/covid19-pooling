@@ -50,12 +50,12 @@ if __name__ == "__main__":
         'purim',
         'sobel'
     ]
-    #qoi = 'ppt'
-    qoi = 'time'
+    qoi = 'ppt'
+    #qoi = 'time'
 
     initialLevel = 1
     numRefine = 10
-    maxPoints = 1500
+    maxPoints = 500
     verbose = False
 
     num_total_calculations = 0

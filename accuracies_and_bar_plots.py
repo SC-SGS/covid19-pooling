@@ -42,11 +42,12 @@ def worker(return_dict, sample_size, prob_sick, success_rate_test, false_posivit
     performs the same test tests_repetitions many times and returns expected valkues and standard deviations
     '''
 
-    stat_test = Corona_Simulation_Statistics(sample_size, prob_sick, success_rate_test,
+    stat_test = Corona_Simulation_Statistics(prob_sick, success_rate_test,
                                              false_posivite_rate, test_strategy,
-                                             num_simultaneous_tests, test_duration, group_size,
+                                             test_duration, group_size,
                                              tests_repetitions, test_result_decision_strategy)
-    stat_test.statistical_analysis(number_of_instances)
+
+    stat_test.statistical_analysis(sample_size, num_simultaneous_tests, number_of_instances)
     print('Calculated {} for {} prob sick {}'.format(test_strategy, group_size, prob_sick))
     print('scaled to {} population and {} simulataneous tests\n'.format(sample_size, num_simultaneous_tests))
     # gather results
@@ -65,7 +66,6 @@ def worker(return_dict, sample_size, prob_sick, success_rate_test, false_posivit
     worker_dict['sd_ratio_of_sick_found'] = stat_test.sd_ratio_of_sick_found
     worker_dict['sd_number_sick_people'] = stat_test.sd_number_sick_people
     worker_dict['sd_num_sent_to_quarantine'] = stat_test.sd_num_sent_to_quarantine
-    # worker_dict['e_number_groupwise_tests'] = stat_test.e_number_groupwise_tests
 
     return_dict['{}'.format(test_strategy)] = worker_dict
 
@@ -82,9 +82,9 @@ def calculation():
     test_result_decision_strategy = 'max'
     if success_rate_test == 0.99:
         test_strategies = [
-            ['individual testing', 1],
-            ['two stage testing', 10],
-            ['binary splitting', 32],
+            ['individual-testing', 1],
+            ['two-stage-testing', 10],
+            ['binary-splitting', 32],
             ['RBS', 32],
             ['purim', 27],
             ['sobel', 31]
@@ -112,7 +112,6 @@ def calculation():
     e_num_confirmed_sick_individuals = np.zeros((len(test_strategies)))
     e_number_sick_people = np.zeros((len(test_strategies)))
     e_num_sent_to_quarantine = np.zeros((len(test_strategies)))
-    # e_number_groupwise_tests = {}
 
     sd_false_positive_rate = np.zeros((len(test_strategies)))
     sd_ratio_of_sick_found = np.zeros((len(test_strategies)))
@@ -141,7 +140,6 @@ def calculation():
         e_num_confirmed_sick_individuals[i] = worker_dict['e_num_confirmed_sick_individuals']
         e_number_sick_people[i] = worker_dict['e_number_sick_people']
         e_num_sent_to_quarantine[i] = worker_dict['e_num_sent_to_quarantine']
-        # e_number_groupwise_tests[i] = worker_dict['e_number_groupwise_tests']
 
         sd_false_positive_rate[i] = worker_dict['sd_false_positive_rate']
         sd_ratio_of_sick_found[i] = worker_dict['sd_ratio_of_sick_found']
@@ -167,7 +165,6 @@ def calculation():
         'e_num_confirmed_sick_individuals': e_num_confirmed_sick_individuals,
         'e_number_sick_people': e_number_sick_people,
         'e_num_sent_to_quarantine': e_num_sent_to_quarantine,
-        # 'e_number_groupwise_tests': e_number_groupwise_tests,
         'sd_false_positive_rate': sd_false_positive_rate,
         'sd_ratio_of_sick_found': sd_ratio_of_sick_found,
         'sd_num_confirmed_sick_individuals': sd_num_confirmed_sick_individuals,
@@ -283,39 +280,15 @@ def plotting(filename, saveFig=0):
     if saveFig:
         plt.savefig(figpath+'_bar.pdf', bbox_inches='tight')
 
-    ######### plot groupwise number of tests boxplot ########
-    # plt.figure(figsize=(6, 5))
-    # data = []
-    # for i, _ in enumerate(test_strategies):
-    #     # for i in [0, 1, 2, 3, 5]:
-    #     data += [e_number_groupwise_tests[i]]
-    #     print("{}: max {}".format(i, max(e_number_groupwise_tests[i])))
-    # # sobel data:
-    # print('sobel: mean: {}, sd: {} max: {}, 95perc: {}, 5perc: {}'.format(np.mean(e_number_groupwise_tests[5]),
-    #                                                                       np.std(e_number_groupwise_tests[5]),
-    #                                                                       np.max(e_number_groupwise_tests[5]),
-    #                                                                       np.percentile(
-    #                                                                           e_number_groupwise_tests[5], 95),
-    #                                                                       np.percentile(e_number_groupwise_tests[5], 5)))
-    # np.savetxt('sobel_data_1_run.dat', e_number_groupwise_tests[5])
-    # plt.boxplot(data)
-
-    # plt.xticks(range(1, len(test_strategies)+1), ['ind.', '2l-p.', 'bin.', 'r.bin.', 'pu.', 's-r1'])
-    # plt.xlabel('method')
-    # plt.ylabel('expected number of total tests for one group')
-
-    # if saveFig:
-    #     plt.savefig(figpath+'_groupwise_num_tests_boxplot.pdf', bbox_inches='tight')
-
 
 if __name__ == "__main__":
-    # either do claculations
+    # either do calculations
     filename = calculation()
 
     # or use precalculated data
-    # filename = getName()
+    #filename = getName()
 
-    saveFig = 1
+    saveFig = 0
     plotting(filename, saveFig)
     if saveFig == 0:
         plt.show()

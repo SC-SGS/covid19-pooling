@@ -1,6 +1,7 @@
 import numpy as np
 from CoronaTestingSimulation import Corona_Simulation
 from aux import generate_data
+import warnings
 
 
 class Corona_Simulation_Statistics():
@@ -33,11 +34,7 @@ class Corona_Simulation_Statistics():
         self.test_instance = Corona_Simulation(sample_size, rawdata, sick_list, number_sick_people, self.prob_sick,
                                                self.success_rate_test, self.false_posivite_rate,
                                                self.tests_repititions, self.test_result_decision_strategy)
-        # time independent methods
-        if self.test_strategy == 'binary splitting (groupsize independent)':
-            self.test_instance.binary_splitting()
-        # time dependent methods
-        elif self.test_strategy == 'binary-splitting':
+        if self.test_strategy == 'binary-splitting':
             self.test_instance.binary_splitting_time_dependent(
                 num_simultaneous_tests, self.test_duration, self.group_size)
         elif self.test_strategy == 'individual-testing':
@@ -53,55 +50,8 @@ class Corona_Simulation_Statistics():
             self.test_instance.purim_time_dependent(num_simultaneous_tests, self.test_duration, self.group_size)
         elif self.test_strategy == 'sobel':
             self.test_instance.sobel_main(num_simultaneous_tests, self.test_duration, self.group_size)
-
-    def multilevel_MonteCarlo_step(self, repetitions, two_sample_sizes, two_num_tests):
-        number_of_tests = np.zeros(2)
-        test_time = np.zeros(2)
-        num_confirmed_sick_individuals = np.zeros(2)
-
-        for i in range(repetitions):
-            rawdata_A, sick_list_A, number_sick_people_A = generate_data(two_sample_sizes[0], self.prob_sick)
-            self.perform_test(two_sample_sizes[0], two_num_tests[0], rawdata_A, sick_list_A, number_sick_people_A)
-            number_of_tests[0] += self.test_instance.number_of_tests
-            test_time[0] += self.test_instance.total_time / 24.0
-            num_confirmed_sick_individuals[0] += len(self.test_instance.confirmed_sick_individuals)
-
-            if two_sample_sizes[1] > 0:
-                rawdata_B, sick_list_B, number_sick_people_B = generate_data(two_sample_sizes[1], self.prob_sick)
-                self.perform_test(two_sample_sizes[1], two_num_tests[1], rawdata_B, sick_list_B, number_sick_people_B)
-                number_of_tests[1] += self.test_instance.number_of_tests
-                test_time[1] += self.test_instance.total_time / 24.0
-                num_confirmed_sick_individuals[1] += len(self.test_instance.confirmed_sick_individuals)
-            self.e_time += (test_time[0]-test_time[1])/repetitions
-            self.e_num_confirmed_sick_individuals += (
-                num_confirmed_sick_individuals[0]-num_confirmed_sick_individuals[1])/repetitions
-            self.e_number_of_tests += (number_of_tests[0]-number_of_tests[1])/repetitions
-
-    def multilevel_MonteCarlo(self, sample_sizes, num_simultaneous_tests, number_mc_repetitions):
-        '''
-        Calculates means of qois for population of sample_sizes[-1] by using multilevel Monte Carlo
-                    E[P_L] = E[P_0] + sum_{l=0}^L (E[P_l] - E[P_{l-1}])
-        where P_l is the simulation using a population of sample_sizes[l] and num_simultaneous_tests[l]
-        Each summand (E[P_l] - E[P_{l-1}]) is calculated using number_mc_repetitions[l] many
-        repetitions of the simulation.
-
-        In contrast to statistical_analysis, this function only calculates means and no standard
-        deviations. However, by using multilevel Monte Carlo, the means are calculated cheaper and
-        more accurate.
-        '''
-
-        # add a dummy entry for first term
-        sample_sizes.insert(0, 0)
-        num_simultaneous_tests.insert(0, 0)
-
-        self.e_time = 0
-        self.e_num_confirmed_sick_individuals = 0
-        self.e_number_of_tests = 0
-
-        for l in range(1, len(sample_sizes)):
-            self.multilevel_MonteCarlo_step(number_mc_repetitions[l-1],
-                                            [sample_sizes[l], sample_sizes[l-1]],
-                                            [num_simultaneous_tests[l], num_simultaneous_tests[l-1]])
+        else:
+            warnings.warn(f'test strategy {self.test_strategy} unknown')
 
     def statistical_analysis(self, sample_size, num_simultaneous_tests, number_of_instances):
         '''
@@ -116,7 +66,7 @@ class Corona_Simulation_Statistics():
         self.number_sick_people = np.zeros(number_of_instances)
         self.num_confirmed_sick_individuals = np.zeros(number_of_instances)
         self.num_sent_to_quarantine = np.zeros(number_of_instances)
-        self.number_groupwise_tests = {}
+        # self.number_groupwise_tests = {}
         self.num_confirmed_per_test = np.zeros(number_of_instances)
 
         # Generate test data for the desired number of instances.
@@ -131,7 +81,7 @@ class Corona_Simulation_Statistics():
             self.num_confirmed_sick_individuals[i] = len(
                 self.test_instance.confirmed_sick_individuals)
             self.num_sent_to_quarantine[i] = len(self.test_instance.sick_individuals)
-            self.number_groupwise_tests[i] = self.test_instance.number_groupwise_tests
+            # self.number_groupwise_tests[i] = self.test_instance.number_groupwise_tests
 
             # derived metrics
             self.num_confirmed_per_test[i] = self.num_confirmed_sick_individuals[i] / self.number_of_tests[i]
@@ -157,11 +107,11 @@ class Corona_Simulation_Statistics():
         self.sd_num_sent_to_quarantine = np.std(self.num_sent_to_quarantine)
         self.sd_num_confirmed_per_test = np.std(self.num_confirmed_per_test)
 
-        self.worst_case_number_groupwise_tests = 0.0
-        self.average_number_groupwise_tests = np.zeros(len(self.number_groupwise_tests[0]))
-        for key in self.number_groupwise_tests:
-            self.average_number_groupwise_tests += self.number_groupwise_tests[key]
-            self.worst_case_number_groupwise_tests = max(self.worst_case_number_groupwise_tests,
-                                                         max(self.number_groupwise_tests[key]))
-        self.average_number_groupwise_tests /= len(self.number_groupwise_tests)
-        self.e_number_groupwise_tests = np.mean(self.average_number_groupwise_tests)
+        # self.worst_case_number_groupwise_tests = 0.0
+        # self.average_number_groupwise_tests = np.zeros(len(self.number_groupwise_tests[0]))
+        # for key in self.number_groupwise_tests:
+        #     self.average_number_groupwise_tests += self.number_groupwise_tests[key]
+        #     self.worst_case_number_groupwise_tests = max(self.worst_case_number_groupwise_tests,
+        #                                                  max(self.number_groupwise_tests[key]))
+        # self.average_number_groupwise_tests /= len(self.number_groupwise_tests)
+        # self.e_number_groupwise_tests = np.mean(self.average_number_groupwise_tests)

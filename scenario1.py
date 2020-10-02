@@ -31,8 +31,7 @@ plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 
 # name for the data dump and plots
 def getName(scale_factor_pop, scale_factor_test, success_rate_test=0.99):
-    # added 'NEW' at beginning for new data as of September 2020
-    name = 'NEW_scenario1_scalepop{}_scaletest{}'.format(scale_factor_pop, scale_factor_test)
+    name = 'scenario1_scalepop{}_scaletest{}'.format(scale_factor_pop, scale_factor_test)
     if success_rate_test != 0.99:
         name += '_{}'.format(success_rate_test)
     return name
@@ -129,32 +128,32 @@ def calculation():
     countries = {}
 
     # as of April 2020
-    # countries['UK'] = {'population': 67890000, 'tests_per_day': 12000,
-    #                    'scale_factor_pop': 10, 'scale_factor_test': 100}
-    # countries['US'] = {'population': 328240000, 'tests_per_day': 146000,
-    #                    'scale_factor_pop': 10, 'scale_factor_test': 100}
-    # countries['SG'] = {'population': 5640000, 'tests_per_day': 2900,
-    #                    'scale_factor_pop': 10, 'scale_factor_test': 10}
-    # countries['IT'] = {'population': 60310000, 'tests_per_day': 46000,
-    #                    'scale_factor_pop': 10, 'scale_factor_test': 100}
-    # countries['DE'] = {'population': 83150000, 'tests_per_day': 123000,
-    #                    'scale_factor_pop': 10, 'scale_factor_test': 100}
+    countries['UK'] = {'population': 67890000, 'tests_per_day': 12000,
+                       'scale_factor_pop': 10, 'scale_factor_test': 100}
+    countries['US'] = {'population': 328240000, 'tests_per_day': 146000,
+                       'scale_factor_pop': 10, 'scale_factor_test': 100}
+    countries['SG'] = {'population': 5640000, 'tests_per_day': 2900,
+                       'scale_factor_pop': 10, 'scale_factor_test': 10}
+    countries['IT'] = {'population': 60310000, 'tests_per_day': 46000,
+                       'scale_factor_pop': 10, 'scale_factor_test': 100}
+    countries['DE'] = {'population': 83150000, 'tests_per_day': 123000,
+                       'scale_factor_pop': 10, 'scale_factor_test': 100}
 
     # as of September 2020
-    countries['BR'] = {'population': 209500000, 'tests_per_day': 71230,
-                       'scale_factor_pop': 100, 'scale_factor_test': 100}
-    countries['ID'] = {'population': 1353000000, 'tests_per_day': 1028280,
-                       'scale_factor_pop': 100, 'scale_factor_test': 100}
-    countries['IT'] = {'population': 60310000, 'tests_per_day': 54882,
-                       'scale_factor_pop': 100, 'scale_factor_test': 100}
-    countries['SG'] = {'population': 5640000, 'tests_per_day': 5414,
-                       'scale_factor_pop': 100, 'scale_factor_test': 10}
-    countries['US'] = {'population': 328240000, 'tests_per_day': 720283,
-                       'scale_factor_pop': 100, 'scale_factor_test': 100}
-    countries['DE'] = {'population': 83150000, 'tests_per_day': 219092,
-                       'scale_factor_pop': 100, 'scale_factor_test': 100}
-    countries['UK'] = {'population': 67890000, 'tests_per_day': 221192,
-                       'scale_factor_pop': 100, 'scale_factor_test': 100}
+    # countries['BR'] = {'population': 209500000, 'tests_per_day': 71230,
+    #                    'scale_factor_pop': 100, 'scale_factor_test': 100}
+    # countries['ID'] = {'population': 1353000000, 'tests_per_day': 1028280,
+    #                    'scale_factor_pop': 100, 'scale_factor_test': 100}
+    # countries['IT'] = {'population': 60310000, 'tests_per_day': 54882,
+    #                    'scale_factor_pop': 100, 'scale_factor_test': 100}
+    # countries['SG'] = {'population': 5640000, 'tests_per_day': 5414,
+    #                    'scale_factor_pop': 100, 'scale_factor_test': 10}
+    # countries['US'] = {'population': 328240000, 'tests_per_day': 720283,
+    #                    'scale_factor_pop': 100, 'scale_factor_test': 100}
+    # countries['DE'] = {'population': 83150000, 'tests_per_day': 219092,
+    #                    'scale_factor_pop': 100, 'scale_factor_test': 100}
+    # countries['UK'] = {'population': 67890000, 'tests_per_day': 221192,
+    #                    'scale_factor_pop': 100, 'scale_factor_test': 100}
 
     num_countries = len(countries.keys())
 
