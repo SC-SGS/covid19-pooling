@@ -9,6 +9,7 @@ def getSetup():
     logging.basicConfig(stream=sys.stderr, level=logging.CRITICAL)
 
     gridType = 'nakBsplineBoundary'
+    #gridType = 'nakPBspline'
     dim = 4
     degree = 3
 

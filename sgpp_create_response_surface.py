@@ -213,12 +213,12 @@ if __name__ == "__main__":
     saveReSurf = True
     calcError = True
     plotError = calcError
-    plotNoise = plotError
-    saveFig = False  # plotError
+    plotNoise = False  # plotError
+    saveFig = True
     numMCPoints = 1000
 
     levels = []  # [1, 2, 3, 4]  # , 5]
-    numPointsArray = [1500]  # [10, 100, 200, 400, 1000, 1500]
+    numPointsArray = [10, 100, 200, 400, 1000, 1500]
 
     initialLevel = 1    # initial level
     numRefine = 10  # number of grid points refined in each step
@@ -238,7 +238,7 @@ if __name__ == "__main__":
     qois = [
         'ppt',
         # 'sd-ppt',
-        'time',
+        # 'time',
         # 'sd-time'
     ]
 

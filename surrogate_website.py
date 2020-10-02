@@ -10,7 +10,7 @@ from sgpp_calculate_stochastic_noise import stochastic_noise
 if __name__ == "__main__":
 
     # DEBUGGING
-    calculate_comparison = True
+    calculate_comparison = False
 
     # WEBSITE INPUT
     # input_prob_sick = 0.27
