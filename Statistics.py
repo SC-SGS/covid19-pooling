@@ -1,5 +1,7 @@
 import numpy as np
 from CoronaTestingSimulation import Corona_Simulation
+from aux import generate_data
+import warnings
 
 
 class Corona_Simulation_Statistics():
@@ -12,13 +14,12 @@ class Corona_Simulation_Statistics():
         group_size   :          how many samples can be pooled
     """
 
-    def __init__(self, sample_size,  prob_sick,
+    def __init__(self, prob_sick,
                  success_rate_test, false_posivite_rate, test_strategy,
-                 num_simultaneous_tests=100, test_duration=6, group_size=8,
+                 test_duration=6, group_size=8,
                  tests_repititions=1, test_result_decision_strategy='max', scale_factor_pop=1):
 
         # scenario settings which will be handed over to Corona_Simulation
-        self.sample_size = sample_size
         self.prob_sick = prob_sick
         self.success_rate_test = success_rate_test
         self.false_posivite_rate = false_posivite_rate
@@ -27,36 +28,36 @@ class Corona_Simulation_Statistics():
         self.group_size = group_size
         self.test_duration = test_duration
         self.test_strategy = test_strategy
-        self.num_simultaneous_tests = num_simultaneous_tests
         self.scale_factor_pop = scale_factor_pop
 
-    def perform_test(self):
-        self.test_instance = Corona_Simulation(self.sample_size, self.prob_sick,
+    def perform_test(self, sample_size, num_simultaneous_tests, rawdata, sick_list, number_sick_people):
+        self.test_instance = Corona_Simulation(sample_size, rawdata, sick_list, number_sick_people, self.prob_sick,
                                                self.success_rate_test, self.false_posivite_rate,
                                                self.tests_repititions, self.test_result_decision_strategy)
-        self.test_instance.generate_data()
-        # time independent methods
-        if self.test_strategy == 'binary splitting (groupsize independent)':
-            self.test_instance.binary_splitting()
-        # time dependent methods
-        elif self.test_strategy == 'binary splitting':
+        if self.test_strategy == 'binary-splitting':
             self.test_instance.binary_splitting_time_dependent(
-                self.num_simultaneous_tests, self.test_duration, self.group_size)
-        elif self.test_strategy == 'individual testing':
+                num_simultaneous_tests, self.test_duration, self.group_size)
+        elif self.test_strategy == 'individual-testing':
             self.test_instance.individual_testing_time_dependent(
-                self.num_simultaneous_tests, self.test_duration)
-        elif self.test_strategy == 'two stage testing':
+                num_simultaneous_tests, self.test_duration)
+        elif self.test_strategy == 'two-stage-testing':
             self.test_instance.two_stage_testing_time_dependent(
-                self.num_simultaneous_tests, self.test_duration, self.group_size)
+                num_simultaneous_tests, self.test_duration, self.group_size)
         elif self.test_strategy == 'RBS':
             self.test_instance.RBS_time_dependent(
-                self.num_simultaneous_tests, self.test_duration, self.group_size)
+                num_simultaneous_tests, self.test_duration, self.group_size)
         elif self.test_strategy == 'purim':
-            self.test_instance.purim_time_dependent(self.num_simultaneous_tests, self.test_duration, self.group_size)
+            self.test_instance.purim_time_dependent(num_simultaneous_tests, self.test_duration, self.group_size)
         elif self.test_strategy == 'sobel':
-            self.test_instance.sobel_main(self.num_simultaneous_tests, self.test_duration, self.group_size)
+            self.test_instance.sobel_main(num_simultaneous_tests, self.test_duration, self.group_size)
+        else:
+            warnings.warn(f'test strategy {self.test_strategy} unknown')
 
-    def statistical_analysis(self, number_of_instances):
+    def statistical_analysis(self, sample_size, num_simultaneous_tests, number_of_instances):
+        '''
+        Calculates means and standard deviations of qois for population of sample_size.
+        The stochastical values are calculated by using number_of_instances many repetitions of the simulation
+        '''
         # result containers
         self.number_of_tests = np.zeros(number_of_instances)
         self.test_times = np.zeros(number_of_instances)
@@ -65,12 +66,13 @@ class Corona_Simulation_Statistics():
         self.number_sick_people = np.zeros(number_of_instances)
         self.num_confirmed_sick_individuals = np.zeros(number_of_instances)
         self.num_sent_to_quarantine = np.zeros(number_of_instances)
-        self.number_groupwise_tests = {}
+        # self.number_groupwise_tests = {}
         self.num_confirmed_per_test = np.zeros(number_of_instances)
 
         # Generate test data for the desired number of instances.
         for i in range(number_of_instances):
-            self.perform_test()
+            rawdata, sick_list, number_sick_people = generate_data(sample_size, self.prob_sick)
+            self.perform_test(sample_size, num_simultaneous_tests, rawdata, sick_list, number_sick_people)
             self.number_of_tests[i] = self.test_instance.number_of_tests
             self.test_times[i] = self.test_instance.total_time / 24.0
             self.ratios_of_sick_found[i] = self.test_instance.success_rate
@@ -79,7 +81,8 @@ class Corona_Simulation_Statistics():
             self.num_confirmed_sick_individuals[i] = len(
                 self.test_instance.confirmed_sick_individuals)
             self.num_sent_to_quarantine[i] = len(self.test_instance.sick_individuals)
-            self.number_groupwise_tests[i] = self.test_instance.number_groupwise_tests
+            # self.number_groupwise_tests[i] = self.test_instance.number_groupwise_tests
+
             # derived metrics
             self.num_confirmed_per_test[i] = self.num_confirmed_sick_individuals[i] / self.number_of_tests[i]
 
@@ -104,7 +107,11 @@ class Corona_Simulation_Statistics():
         self.sd_num_sent_to_quarantine = np.std(self.num_sent_to_quarantine)
         self.sd_num_confirmed_per_test = np.std(self.num_confirmed_per_test)
 
-        self.e_number_groupwise_tests = np.zeros(len(self.number_groupwise_tests[0]))
-        for key in self.number_groupwise_tests:
-            self.e_number_groupwise_tests += self.number_groupwise_tests[key]
-        self.e_number_groupwise_tests /= len(self.number_groupwise_tests)
+        # self.worst_case_number_groupwise_tests = 0.0
+        # self.average_number_groupwise_tests = np.zeros(len(self.number_groupwise_tests[0]))
+        # for key in self.number_groupwise_tests:
+        #     self.average_number_groupwise_tests += self.number_groupwise_tests[key]
+        #     self.worst_case_number_groupwise_tests = max(self.worst_case_number_groupwise_tests,
+        #                                                  max(self.number_groupwise_tests[key]))
+        # self.average_number_groupwise_tests /= len(self.number_groupwise_tests)
+        # self.e_number_groupwise_tests = np.mean(self.average_number_groupwise_tests)

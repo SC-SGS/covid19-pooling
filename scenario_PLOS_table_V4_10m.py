@@ -31,7 +31,7 @@ plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 
 # name for the data dump and plots
 def getName(scale_factor_pop, scale_factor_test, success_rate_test=0.99):
-    name = 'scenario1_scalepop{}_scaletest{}'.format(scale_factor_pop, scale_factor_test)
+    name = 'PLOS_V4_10m_scenario1_scalepop{}_scaletest{}'.format(scale_factor_pop, scale_factor_test)
     if success_rate_test != 0.99:
         name += '_{}'.format(success_rate_test)
     return name
@@ -42,7 +42,7 @@ def worker(return_dict, sample_size, prob_sick, success_rate_test, false_posivit
            tests_repetitions, test_result_decision_strategy, number_of_instances, country):
     '''
     worker function for multiprocessing
-    performs the same test tests_repetitions many times and returns expected valkues and standard deviations
+    performs the same test tests_repetitions many times and returns expected values and standard deviations
     '''
 
     stat_test = Corona_Simulation_Statistics(prob_sick, success_rate_test,
@@ -61,11 +61,13 @@ def worker(return_dict, sample_size, prob_sick, success_rate_test, false_posivit
     worker_dict['e_false_positive_rate'] = stat_test.e_false_positive_rate
     worker_dict['e_ratio_of_sick_found'] = stat_test.e_ratio_of_sick_found
     worker_dict['e_num_confirmed_per_test'] = stat_test.e_num_confirmed_per_test
+    worker_dict['e_num_sent_to_quarantine'] = stat_test.e_num_sent_to_quarantine
     worker_dict['sd_num_tests'] = stat_test.sd_number_of_tests*scale_factor_pop
     worker_dict['sd_time'] = stat_test.sd_time*scale_factor_pop
     worker_dict['sd_false_positive_rate'] = stat_test.sd_false_positive_rate
     worker_dict['sd_ratio_of_sick_found'] = stat_test.sd_ratio_of_sick_found
     worker_dict['sd_num_confirmed_per_test'] = stat_test.sd_num_confirmed_per_test
+    worker_dict['sd_num_sent_to_quarantine'] = stat_test.sd_num_sent_to_quarantine
 
     return_dict['{}_{}_{}'.format(test_strategy, country, prob_sick)] = worker_dict
 
@@ -75,12 +77,12 @@ def calculation():
     randomseed = 19
     np.random.seed(randomseed)
 
-    probabilities_sick = [0.001, 0.0025, 0.005, 0.0075, 0.01, 0.025, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3]
+    probabilities_sick = [0.01]
     success_rate_test = 0.99
     false_posivite_rate = 0.01
     tests_repetitions = 1
     test_result_decision_strategy = 'max'
-    number_of_instances = 10
+    number_of_instances = 20
     test_duration = 5
 
     # optimal group sizes in order individual, two level, binary splitting, RBS, purim, sobel
@@ -126,34 +128,8 @@ def calculation():
     # use scale_factor_pop = 10 for the original results in the paper
     # use scale_factor_pop = 100 for much faster calculation and  little loss of accuracy
     countries = {}
-
-    # as of April 2020
-    countries['UK'] = {'population': 67890000, 'tests_per_day': 12000,
-                       'scale_factor_pop': 10, 'scale_factor_test': 100}
-    countries['US'] = {'population': 328240000, 'tests_per_day': 146000,
-                       'scale_factor_pop': 10, 'scale_factor_test': 100}
-    countries['SG'] = {'population': 5640000, 'tests_per_day': 2900,
-                       'scale_factor_pop': 10, 'scale_factor_test': 10}
-    countries['IT'] = {'population': 60310000, 'tests_per_day': 46000,
-                       'scale_factor_pop': 10, 'scale_factor_test': 100}
-    countries['DE'] = {'population': 83150000, 'tests_per_day': 123000,
-                       'scale_factor_pop': 10, 'scale_factor_test': 100}
-
-    # as of September 2020
-    # countries['BR'] = {'population': 209500000, 'tests_per_day': 71230,
-    #                    'scale_factor_pop': 100, 'scale_factor_test': 100}
-    # countries['ID'] = {'population': 1353000000, 'tests_per_day': 1028280,
-    #                    'scale_factor_pop': 100, 'scale_factor_test': 100}
-    # countries['IT'] = {'population': 60310000, 'tests_per_day': 54882,
-    #                    'scale_factor_pop': 100, 'scale_factor_test': 100}
-    # countries['SG'] = {'population': 5640000, 'tests_per_day': 5414,
-    #                    'scale_factor_pop': 100, 'scale_factor_test': 10}
-    # countries['US'] = {'population': 328240000, 'tests_per_day': 720283,
-    #                    'scale_factor_pop': 100, 'scale_factor_test': 100}
-    # countries['DE'] = {'population': 83150000, 'tests_per_day': 219092,
-    #                    'scale_factor_pop': 100, 'scale_factor_test': 100}
-    # countries['UK'] = {'population': 67890000, 'tests_per_day': 221192,
-    #                    'scale_factor_pop': 100, 'scale_factor_test': 100}
+    countries['DE'] = {'population': 10000000, 'tests_per_day': 100000,
+                       'scale_factor_pop': 1, 'scale_factor_test': 1}
 
     num_countries = len(countries.keys())
 
@@ -171,12 +147,14 @@ def calculation():
     e_num_confirmed_sick_individuals = np.zeros((len(test_strategies), num_countries, len(probabilities_sick)))
     e_ratio_of_sick_found = np.zeros((len(test_strategies), num_countries, len(probabilities_sick)))
     e_num_confirmed_per_test = np.zeros((len(test_strategies), num_countries, len(probabilities_sick)))
+    e_num_sent_to_quarantine = np.zeros((len(test_strategies), num_countries, len(probabilities_sick)))
 
     sd_num_tests = np.zeros((len(test_strategies), num_countries, len(probabilities_sick)))
     sd_time = np.zeros((len(test_strategies), num_countries, len(probabilities_sick)))
     sd_false_positive_rate = np.zeros((len(test_strategies), num_countries, len(probabilities_sick)))
     sd_ratio_of_sick_found = np.zeros((len(test_strategies), num_countries, len(probabilities_sick)))
     sd_num_confirmed_per_test = np.zeros((len(test_strategies), num_countries, len(probabilities_sick)))
+    sd_num_sent_to_quarantine = np.zeros((len(test_strategies), num_countries, len(probabilities_sick)))
 
     jobs = []
 
@@ -210,11 +188,13 @@ def calculation():
                 e_false_positive_rate[i, j, k] = worker_dict['e_false_positive_rate']
                 e_ratio_of_sick_found[i, j, k] = worker_dict['e_ratio_of_sick_found']
                 e_num_confirmed_per_test[i, j, k] = worker_dict['e_num_confirmed_per_test']
+                e_num_sent_to_quarantine[i, j, k] = worker_dict['e_num_sent_to_quarantine']
                 sd_num_tests[i, j, k] = worker_dict['sd_num_tests']
                 sd_time[i, j, k] = worker_dict['sd_time']
                 sd_false_positive_rate[i, j, k] = worker_dict['sd_false_positive_rate']
                 sd_ratio_of_sick_found[i, j, k] = worker_dict['sd_ratio_of_sick_found']
                 sd_num_confirmed_per_test[i, j, k] = worker_dict['sd_num_confirmed_per_test']
+                sd_num_sent_to_quarantine[i, j, k] = worker_dict['sd_num_sent_to_quarantine']
 
     sample_sizes = [countries[country]['population'] for country in countries.keys()]
     daily_tests_per_1m = [countries[country]['tests_per_day']/countries[country]
@@ -243,11 +223,13 @@ def calculation():
         'e_num_confirmed_sick_individuals': e_num_confirmed_sick_individuals,
         'e_ratio_of_sick_found': e_ratio_of_sick_found,
         'e_num_confirmed_per_test': e_num_confirmed_per_test,
+        'e_num_sent_to_quarantine': e_num_sent_to_quarantine,
         'sd_num_tests': sd_num_tests,
         'sd_time': sd_time,
         'sd_false_positive_rate': sd_false_positive_rate,
         'sd_ratio_of_sick_found': sd_ratio_of_sick_found,
         'sd_num_confirmed_per_test': sd_num_confirmed_per_test,
+        'sd_num_sent_to_quarantine': sd_num_sent_to_quarantine,
         'sample_sizes': sample_sizes,
         'daily_tests_per_1m': daily_tests_per_1m,
         'runtime': runtime,
@@ -372,19 +354,19 @@ def plotting(filename, prob_sick_plot_index, saveFig=0):
 
 
 if __name__ == "__main__":
-    recalculate = False
+    recalculate = True
     if recalculate:
         # either do calculations
         filename = calculation()
     else:
         # or use precalculated data
-        scale_factor_pop = 100
+        scale_factor_pop = 10
         scale_factor_test = 100
         filename = getName(scale_factor_pop, scale_factor_test)
 
-    saveFig = 0
-    prob_sick_plot_index = 4  # 4 -> 0.01
-    # out of [0.001, 0.0025, 0.005, 0.0075, 0.01, 0.025, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3]
-    plotting(filename, prob_sick_plot_index, saveFig)
-    if saveFig == 0:
-        plt.show()
+#    saveFig = 1
+#    prob_sick_plot_index = 4  # 4 -> 0.01
+#    # out of [0.001, 0.0025, 0.005, 0.0075, 0.01, 0.025, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3]
+#    plotting(filename, prob_sick_plot_index, saveFig)
+#    if saveFig == 0:
+#        plt.show()

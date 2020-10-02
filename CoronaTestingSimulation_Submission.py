@@ -67,19 +67,24 @@ class Corona_Simulation(object):
         self.success_rate = 0
         self.number_false_positives = 0
         self.false_posivite_rate = 0
-        self.number_of_groups = 0  # counts the number of groups processed so far
-        self.VERBOSE = True
+        self.number_of_groups = 0 # counts the number of groups processed so far
 
     # auxiliary routine for binary_splitting_time_dependent
     # The 'data' is seen as a stack and to create groups entries are popped from this stack
 
     def get_next_group_from_data(self, group_size):
-        if self.number_of_groups * group_size >= len(self.rawdata):
+        if len(self.rawdata) == 0:
             return
-        new_group = self.rawdata[self.number_of_groups*group_size:(self.number_of_groups+1)*group_size]
         self.number_of_groups += 1
-        if self.VERBOSE and (self.number_of_groups % 100000 == 0):
-            sys.stderr.write("status: {:10} individuals processed\n".format(self.number_of_groups*group_size))
+        if self.number_of_groups % 1000 == 0:
+            sys.stderr.write("status: {} individuals processed\n".format(self.number_of_groups*group_size))
+        ### TODO: remove comments - efficiency improvement
+        # new_group = self.rawdata[:group_size]
+        # self.rawdata = self.rawdata[group_size:]
+        if len(self.rawdata) >= group_size:
+            new_group = [self.rawdata.pop(0) for j in range(group_size)]
+        elif len(self.rawdata) < group_size and len(self.rawdata) > 0:
+            new_group = [self.rawdata.pop(0) for j in range(len(self.rawdata))]
         self.active_groups += [[list(range(self.continuousIndex,
                                            self.continuousIndex+len(new_group))), new_group]]
         self.continuousIndex += len(new_group)
@@ -346,9 +351,9 @@ class Corona_Simulation(object):
         self.active_groups = []
         self.confirmed_sick_individuals = []
         # this is for indexing the individuals
-        # while (len(self.rawdata) > 0):
-        while self.number_of_groups * maxGroupsize < len(self.rawdata):
+        while (len(self.rawdata) > 0):
             # initial groups have maximal size
+            # TODO: inefficient way of getting groups
             self.get_next_group_from_data(maxGroupsize)
             binomial_set = self.active_groups[0]
             self.active_groups = self.active_groups[1:]
@@ -431,6 +436,21 @@ class Corona_Simulation(object):
         # simplified time measure, because individual time tracking is a bit complicated
         self.total_time = self.number_of_tests*self.test_duration * self.tests_repetitions/self.num_simultaneous_tests
         self.update_sick_lists_and_success_rate()
+
+#     # parent function which calls the binary_splitting_step recursively
+#     # This is a time independent version which was not used in the paper
+#     def binary_splitting(self):
+#         # initiate all active test groups, which is initially the list of all people
+#         # with index and sick indicator
+#         self.active_groups = [[range(len(self.rawdata)), self.rawdata]]
+#         self.sick_individuals = []
+#         self.number_of_tests = 0
+#         self.number_of_rounds = 0
+#         self.confirmed_sick_individuals = []
+#         while (len(self.active_groups) != 0 and self.number_of_rounds < self.sample_size):
+#             testgroup = aux._split_groups(self.active_groups[0])
+#             self.active_groups = self.active_groups[1:]
+#             self.binary_splitting_step(testgroup)
 
     # one test per individual, no pooling
     # performed with respect to time and number of simultaneously processable tests
