@@ -10,13 +10,13 @@ from sgpp_create_response_surface import auxiliary
 # default plot font sizes
 SMALL_SIZE = 12
 MEDIUM_SIZE = 14
-BIGGER_SIZE = 16
+BIGGER_SIZE = 18
 plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
 plt.rc('axes', titlesize=SMALL_SIZE)     # fontsize of the axes title
 plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
 plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
-plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
-plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
+plt.rc('ytick', labelsize=16)    # fontsize of the tick labels
+plt.rc('legend', fontsize=MEDIUM_SIZE)    # legend fontsize
 plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 
 gridType, dim, degree, _, _, name, _, _, \
@@ -26,7 +26,7 @@ gridType, dim, degree, _, _, name, _, _, \
 qoi = 'ppt'
 # qoi = 'time'
 # qoi = 'num_confirmed_sick_individuals'
-#qoi = 'num_sent_to_quarantine'
+# qoi = 'num_sent_to_quarantine'
 
 
 test_strategies = [
@@ -37,6 +37,15 @@ test_strategies = [
     'purim',
     'sobel'
 ]
+
+legend_labels = ['Individual testing',
+                 '2-level pooling',
+                 'Binary splitting',
+                 'Recursive binary splitting',
+                 'Purim',
+                 'Sobel-R-1'
+                 ]
+
 markers = ['o', '*', '^', '+', 's', 'd', 'v', '<', '>']
 colors = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9']
 pop_rep = [[1000, 1], [1000, 10], [10000, 1], [10000, 5],  [10000, 10], [100000, 1], [100000, 10]]
@@ -70,19 +79,19 @@ for j, [pop, rep] in enumerate(reSurf_pop_rep):
                         saveReSurf=False)
 
 # PLOT
-plt.figure(figsize=[18, 9])
+#plt.figure(figsize=[9, 18])
 for i, test_strategy in enumerate(test_strategies):
-    plt.subplot(2, 3, i+1)
+    plt.figure(figsize=[6, 4])
+    #plt.subplot(3, 2, i+1)
     # hard coded X because I couldn't find a nice way of quickly getting what i want
-    plt.plot([1, 4, 6], adaptive_nrmses[i, :, 0], '-', color=colors[i], marker=markers[i],
-             label=test_strategy)
+    plt.plot([1, 4, 6], adaptive_nrmses[i, :, 0], '-', color=colors[i], marker=markers[i], label=legend_labels[i])
     plt.plot(X, noises[i, :], '--', color=colors[i],  label='approx. noise')
 
     # sqrt(N), Monte Carlo convergence h^(-1/2)
     if qoi == 'ppt':
-        plt.plot([1, 4], [5e-2, 1e-2], 'grey', 'o', label='h^{-1/2}')
+        plt.plot([1, 4], [5e-2, 1e-2], 'grey', 'o', label=r'$h^{-1/2}$')
         plt.ylim([1e-3, 1e-1])
-    elif qoi == 'time' and test_strategy != 'individual-testing':
+    if qoi == 'time' and test_strategy != 'individual-testing':
         plt.plot([1, 4], [5e-0, 1e-0], 'grey', 'o')
         plt.ylim([1e-1, 50])
         plt.ylabel('approx. noise in days')
@@ -91,22 +100,67 @@ for i, test_strategy in enumerate(test_strategies):
     plt.xticks(range(len(pop_rep)), labels)
     plt.gca().set_yscale('log')
     # plt.title(f'{test_strategy}')
-    plt.legend(loc='upper right')
-    if test_strategy == 'purim':
-        plt.xlabel('population/repetitions')
+
+    # There is a weirde bug where the legend gets a strange extra entry. I hard code remove this here
+    handles, labels = plt.gca().get_legend_handles_labels()
+    handles = handles[:-1]
+    labels = labels[:-1]
+    plt.legend(handles, labels, loc='lower left')
+    # if test_strategy == 'purim':
+    #     plt.xlabel('population/repetitions')
+
+    plt.tight_layout()
+    # plt.savefig(f'plots/stochastic_noise_and_convergence_{test_strategy}.pdf')
+    plt.savefig(f'/home/rehmemk/git/diss/gfx/pre/gfx_8_covid/stochastic_noise_and_convergence_{test_strategy}.pdf')
 
 # save data for diss plot
-data = {'test_strategies': test_strategies,
-        'adaptive_nrmses': adaptive_nrmses,
-        'noises': noises,
-        'pop_rep': pop_rep
-        }
-dissPath = '/home/rehmemk/git/diss/gfx/py/data/'
-fileName = f'stochastic_noise_and_convergence_data_{qoi}.pkl'
-savePath = os.path.join(dissPath, fileName)
-with open(savePath, 'wb+') as fp:
-    pickle.dump(data, fp)
-print(f'saved relevant plotting data to {savePath}')
+# data = {'test_strategies': test_strategies,
+#         'adaptive_nrmses': adaptive_nrmses,
+#         'noises': noises,
+#         'pop_rep': pop_rep
+#         }
+# dissPath = '/home/rehmemk/git/diss/gfx/py/data/'
+# fileName = f'stochastic_noise_and_convergence_data_{qoi}.pkl'
+# savePath = os.path.join(dissPath, fileName)
+# with open(savePath, 'wb+') as fp:
+#     pickle.dump(data, fp)
+# print(f'saved relevant plotting data to {savePath}')
 
-plt.show()
-#plt.savefig('stochastic_noise_and_convergence.pdf', bbox_inches='tight', pad_inches=0)
+# Legend
+plt.figure()
+plt.plot([0], [0], c=colors[0], marker=markers[0], label='Individual testing')
+plt.plot([0], [0], c=colors[1], marker=markers[1], label='2-level pooling')
+plt.plot([0], [0], c=colors[2], marker=markers[2], label='Binary splitting')
+plt.plot([0], [0], c=colors[3], marker=markers[3], label='Recursive binary splitting')
+plt.plot([0], [0], c=colors[4], marker=markers[4], label='Purim')
+plt.plot([0], [0], c=colors[5], marker=markers[5], label='Sobel-R-1')
+plt.plot([0], [0], 'k--', label='approx. noise')
+plt.plot([0], [0], c='grey', label=r'$h^{-1/2}$')
+axe = plt.gca()
+handles, labels = axe.get_legend_handles_labels()
+
+originalHandles = handles[:]
+originalLabels = labels[:]
+plt.figure()
+axe = plt.gca()
+axe.axis('off')
+labels[3] = originalLabels[1]
+labels[1] = originalLabels[2]
+labels[2] = originalLabels[4]
+labels[4] = originalLabels[3]
+handles[3] = originalHandles[1]
+handles[1] = originalHandles[2]
+handles[2] = originalHandles[4]
+handles[4] = originalHandles[3]
+axe.legend(handles, labels, loc='center', fontsize=SMALL_SIZE, ncol=3)
+axe.xaxis.set_visible(False)
+axe.yaxis.set_visible(False)
+for v in axe.spines.values():
+    v.set_visible(False)
+# cut off whitespace
+plt.subplots_adjust(left=0.0, right=1.0, top=0.6, bottom=0.4)
+#plt.savefig('plots/stochastic_noise_and_convergence_legend.pdf', dpi=300,bbox_inches='tight', pad_inches=0.0, format='pdf')
+plt.savefig('/home/rehmemk/git/diss/gfx/pre/gfx_8_covid/stochastic_noise_and_convergence_legend.pdf',
+            dpi=300, bbox_inches='tight', pad_inches=0.0, format='pdf')
+
+# plt.show()
