@@ -11,10 +11,13 @@ from sgpp_simStorage import sgpp_simStorage, objFuncSGpp
 from sgpp_calculate_stochastic_noise import stochastic_noise
 from setup import getSetup
 
+sys.path.append('/home/rehmemk/git/diss/gfx/py/helper')  # nopep8
+from figure import Figure  # nopep8
+
 # default plot font sizes
-SMALL_SIZE = 12
-MEDIUM_SIZE = 14
-BIGGER_SIZE = 16
+SMALL_SIZE = 22
+MEDIUM_SIZE = 24
+BIGGER_SIZE = 26
 plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
 plt.rc('axes', titlesize=SMALL_SIZE)     # fontsize of the axes title
 plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
@@ -214,9 +217,10 @@ if __name__ == "__main__":
     calcError = True
     plotError = calcError
     plotNoise = False  # plotError
-    saveFig = True
-    numMCPoints = 1000
+    saveFig = True  # True
+    numMCPoints = 100
 
+    # Website uses adaptive 1500
     levels = []  # [1, 2, 3, 4]  # , 5]
     numPointsArray = [10, 100, 200, 400, 1000, 1500]
 
@@ -240,6 +244,10 @@ if __name__ == "__main__":
         # 'sd-ppt',
         # 'time',
         # 'sd-time'
+        # 'numtests',
+        # 'numconfirmed',
+        # 'quarantined',
+        # 'e_ratio_of_sick_found',
     ]
 
     regular_l2errors = np.zeros((len(test_strategies), len(qois), len(levels)))
@@ -317,8 +325,10 @@ if __name__ == "__main__":
 
         # ADAPTIVE PLOTTING
         if len(numPointsArray) > 0:
-            plt.figure(figsize=(8, 6))
-            plt.title('adaptive')
+            #plt.figure(figsize=(8, 6))
+            F = Figure(mode='thesis')
+            plt.gcf().set_size_inches(8, 6)
+            # plt.title('adaptive')
             plotindex = 1
             for j, qoi in enumerate(qois):
                 if len(qois) > 1:
@@ -328,8 +338,8 @@ if __name__ == "__main__":
                     # plt.plot(adaptive_gridSizes[i, j, :], adaptive_l2errors[i, j, :],
                     #          label=test_strategy, marker=markers[i], color=colors[i])
                     plt.plot(adaptive_gridSizes[i, j, :], adaptive_nrmses[i, j, :],
-                             label=test_strategy, marker=markers[i], color=colors[i])
-                    plt.legend()
+                             label=test_strategy, marker=markers[i], color=colors[i], linewidth=1.5)
+                    # plt.legend()
 
                     if plotNoise:
                         numNoisePoints = 100
@@ -339,9 +349,11 @@ if __name__ == "__main__":
                         plt.plot(adaptive_gridSizes[i, j, :], [noise]*len(numPointsArray),
                                  '--', color=colors[i])  # , marker=markers[i])
 
-                plt.title(qoi)
-                plt.xlabel('num adaptive grid points')
-                plt.ylabel('NRMSE')
+                # plt.title(qoi)
+                #plt.xlabel('num adaptive grid points')
+                plt.xticks([0, 500, 1000, 1500, 2000])
+                plt.xlabel('$\mathrm{number}\ \mathrm{of}\ \mathrm{grid}\ \mathrm{points}$')
+                plt.ylabel('$\mathrm{NRMSE}$')
                 #plt.ylabel('L2 error')
                 plt.gca().set_yscale('log')
                 #plt.ylim([1e-3, 1])

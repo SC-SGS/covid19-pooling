@@ -1,3 +1,4 @@
+import matplotlib
 import sys
 import numpy as np
 import pickle
@@ -6,10 +7,13 @@ import matplotlib.pyplot as plt
 # whether to print plotdata
 PRINTPLOTDATA = True
 
+sys.path.append('/home/rehmemk/git/diss/gfx/py/helper')  # nopep8
+from figure import Figure  # nopep8
+
 # default plot font sizes
-SMALL_SIZE = 12
-MEDIUM_SIZE = 14
-BIGGER_SIZE = 16
+SMALL_SIZE = 16
+MEDIUM_SIZE = 18
+BIGGER_SIZE = 18
 plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
 plt.rc('axes', titlesize=SMALL_SIZE)     # fontsize of the axes title
 plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
@@ -54,17 +58,22 @@ def plotting(filename, prob_sick_plot_index, saveFig=0):
               'Binary splitting', 'Recursive binary splitting', 'Purim', 'Sobel-R1']
 
     ######## prob sick / sick persons per test ########
-    plt.figure()
+    #plt.figure(figsize=(6, 5))
+    F = Figure(mode='thesis')
+    plt.gcf().set_size_inches(6, 5)
     for i, test_strategy in enumerate(test_strategies):
         for j in [0]:  # it's the same for all countries
             plt.plot(probabilities_sick, e_num_confirmed_per_test[i, j, :],
                      label=labels[i], marker=markers[i], color=colors[i], linestyle=linestyles[i])
             # plt.errorbar(probabilities_sick, e_num_confirmed_per_test[i, j, :],
             #              yerr=sd_num_confirmed_per_test[i, j, :], ecolor='k', linestyle='None', capsize=5)
-    plt.xlabel('infection rate')
-    plt.ylabel('exp. number of identified cases per test')
+    plt.xlabel('$\mathrm{infection}\ \mathrm{rate}$')
+    plt.ylabel(
+        '$\mathrm{exp.}\ \mathrm{number}\ \mathrm{of}\ \mathrm{identified}\ \mathrm{cases}\ \mathrm{per}\ \mathrm{test}$')
     plt.xticks([0.001, 0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3], [
-               '0.1%    ', '    1%', '5%', '10%', '15%', '20%', '25%', '30%', ])
+               '.', '.', '5\%', '10\%', '15\%', '20\%', '25\%', '30\%', ])
+    plt.text(-0.0252, -0.037, '0.1\%', fontsize=SMALL_SIZE)
+    plt.text(0.006, -0.037, '1\%', fontsize=SMALL_SIZE)
     #plt.legend(loc='lower right', fontsize=11)
     if PRINTPLOTDATA:
         print(figpath+'psi{}_probsick_ppt.pdf'.format(prob_sick_plot_index))
@@ -73,8 +82,16 @@ def plotting(filename, prob_sick_plot_index, saveFig=0):
             print("%20s" % test_strategy, "".join(map(lambda x: "%7.5f " % x, e_num_confirmed_per_test[i, 0, :])))
     plt.tight_layout()
     if saveFig:
-        plt.savefig(figpath+'psi{}_probsick_ppt.pdf'.format(prob_sick_plot_index), bbox_inches='tight')
+        plt.savefig(figpath+'psi{}_probsick_ppt.pdf'.format(prob_sick_plot_index))  # , bbox_inches='tight')
+        plt.close()
         # save legend seperately
+        plt.figure()
+        plt.plot([0], [0], c=colors[0], marker=markers[0], label='Individual testing')
+        plt.plot([0], [0], c=colors[1], marker=markers[1], label='two level pooling')
+        plt.plot([0], [0], c=colors[2], marker=markers[2], label='Binary splitting')
+        plt.plot([0], [0], c=colors[3], marker=markers[3], label='RBS')
+        plt.plot([0], [0], c=colors[4], marker=markers[4], label='Purim')
+        plt.plot([0], [0], c=colors[5], marker=markers[5], label='Sobel-R-1')
         axe = plt.gca()
         handles, labels = axe.get_legend_handles_labels()
 
@@ -83,7 +100,7 @@ def plotting(filename, prob_sick_plot_index, saveFig=0):
         plt.figure()
         axe = plt.gca()
         axe.axis('off')
-        axe.legend(handles, labels, loc='center', fontsize=legendfontsize, ncol=3)
+        axe.legend(handles, labels, loc='center', fontsize=legendfontsize, ncol=6)
         axe.xaxis.set_visible(False)
         axe.yaxis.set_visible(False)
         for v in axe.spines.values():
@@ -92,20 +109,29 @@ def plotting(filename, prob_sick_plot_index, saveFig=0):
         plt.subplots_adjust(left=0.0, right=1.0, top=0.6, bottom=0.4)
         plt.savefig(figpath + 'legend.pdf', dpi=300,
                     bbox_inches='tight', pad_inches=0.0, format='pdf')
+    plt.close()
 
     ######## test per 1M / expected time to test all ########
-    plt.figure()
+    plt.figure(figsize=(6, 5))
+    #F = Figure(mode='thesis')
+    #plt.gcf().set_size_inches(6, 5)
     for i, test_strategy in enumerate(test_strategies):
         plt.plot(daily_tests_per_1m, e_time[i, :, prob_sick_plot_index],
                  label=labels[i], marker=markers[i], color=colors[i], linestyle=linestyles[i])
         # plt.errorbar(daily_tests_per_1m, e_time[i, :, prob_sick_plot_index],
         #              yerr=sd_time[i, :, prob_sick_plot_index], ecolor='k',
         #              linestyle='None', capsize=5)
+    plt.ylabel('$\mathrm{exp.}\ \mathrm{time}\ \mathrm{to}\ \mathrm{test}\ \mathrm{population}\ \mathrm{(days)}$')
+    plt.xlabel('$\mathrm{daily}\ \mathrm{tests}\ / \mathrm{1M}\ \mathrm{population.}$')
     # plt.xticks(daily_tests_per_1m, ['{} {}'.format(country, int(daily_tests_per_1m[i]))
     #                                 for i, country in enumerate(countries)], rotation=55)
-    plt.xticks(daily_tests_per_1m, ['UK 176', 'US 444      ', '         SG 514', 'IT 762', 'DE 1479'])
-    plt.ylabel('exp. time to test population [days]')
-    plt.xlabel('daily tests / 1M population.')
+    #plt.xticks(daily_tests_per_1m, [' ', ' ', ' ', ' ', ' '])
+    plt.xticks(daily_tests_per_1m, ['.', '.', '.', '.', '.'])
+    plt.text(-18, 36, '$\mathrm{UK}(176)$', fontsize=SMALL_SIZE)
+    plt.text(235, 36, '$\mathrm{US}(444)$', fontsize=SMALL_SIZE)
+    plt.text(486, 36, '$\mathrm{SG}(514)$', fontsize=SMALL_SIZE)
+    plt.text(753, 36, '$\mathrm{IT}(762)$', fontsize=SMALL_SIZE)
+    plt.text(1311, 36, '$\mathrm{DE}(1479)$', fontsize=SMALL_SIZE)
     #plt.legend(loc='upper right')
     if PRINTPLOTDATA:
         print(figpath+'psi{}_testsper1M_time.pdf'.format(prob_sick_plot_index))
@@ -119,7 +145,8 @@ def plotting(filename, prob_sick_plot_index, saveFig=0):
     plt.gca().set_yscale('log')
     plt.tight_layout()
     if saveFig:
-        plt.savefig(figpath+'psi{}_testsper1M_time.pdf'.format(prob_sick_plot_index), bbox_inches='tight')
+        plt.savefig(figpath+'psi{}_testsper1M_time.pdf'.format(prob_sick_plot_index))  # , bbox_inches='tight')
+        plt.close()
 
 
 if __name__ == "__main__":

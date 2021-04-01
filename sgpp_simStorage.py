@@ -81,8 +81,8 @@ def simulate(sample_size, prob_sick, success_rate_test, false_positive_rate, tes
     sd_num_sent_to_quarantine = stat_test.sd_num_sent_to_quarantine
 
     # these are new and were not stored with the data until May 29th 2020
-    e_number_groupwise_tests = stat_test.e_number_groupwise_tests
-    worst_case_number_groupwise_tests = stat_test.worst_case_number_groupwise_tests
+    #e_number_groupwise_tests = stat_test.e_number_groupwise_tests
+    #worst_case_number_groupwise_tests = stat_test.worst_case_number_groupwise_tests
     e_number_sick_people = stat_test.e_number_sick_people
     sd_number_sick_people = stat_test.sd_number_sick_people
 

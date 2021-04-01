@@ -8,15 +8,18 @@ from CoronaTestingSimulation import Corona_Simulation
 from Statistics import Corona_Simulation_Statistics
 import subprocess
 
+sys.path.append('/home/rehmemk/git/diss/gfx/py/helper')  # nopep8
+from figure import Figure  # nopep8
+
 '''
 Groupsizes
 Determine optimal groupsizes for all methods depending on the infection rate
 '''
 
 # default plot font sizes
-SMALL_SIZE = 16
-MEDIUM_SIZE = 18
-BIGGER_SIZE = 20
+SMALL_SIZE = 20
+MEDIUM_SIZE = 24
+BIGGER_SIZE = 24
 plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
 plt.rc('axes', titlesize=SMALL_SIZE)     # fontsize of the axes title
 plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
@@ -64,26 +67,33 @@ def plotting(filename, saveFig=0):
               'binary splitting (BS)', 'recursive binary splitting (RBS)',
               'purim', 'sobel']
     for k, probability_sick in enumerate(probabilities_sick):
-        plt.figure()
-        plt.title('infection rate: {}%'.format(int(probability_sick*100)), fontsize=BIGGER_SIZE)
+        # plt.figure()
+        F = Figure(mode='thesis')
+        plt.gcf().set_size_inches(6, 5)
+        plt.title('$\mathrm{{infection}}\ \mathrm{{rate:}} {}\%$'.format(
+            int(probability_sick*100)), fontsize=BIGGER_SIZE)
         for i, test_strategy in enumerate(test_strategies):
             plt.plot(group_sizes, e_time[i, :, k],
                      label=labels[i], marker=markers[i], color=colors[i])
-            plt.fill_between(group_sizes, e_time[i, :, k]-sd_time[i, :, k],
-                             e_time[i, :, k] + sd_time[i, :, k], color=colors[i], alpha=0.4)
-
-        plt.xlabel('pool size')
+            # plt.fill_between(group_sizes, e_time[i, :, k]-sd_time[i, :, k],
+            #                  e_time[i, :, k] + sd_time[i, :, k], color=colors[i], alpha=0.4)
+        if k == 0:
+            plt.ylabel('$\mathrm{expected}\ \mathrm{time}\ \mathrm{to}\ \mathrm{test}\ \mathrm{pop.}\ \mathrm{(days)}$')
+        else:
+            plt.ylabel('expected time to test pop. (days)', color='white')
+        plt.xlabel('$\mathrm{pool}\ \mathrm{size}$')
         if k == 5:
             plt.legend(loc='upper right')
         plt.ylim([0, 130])
         if saveFig:
             plt.savefig(figpath+'_{}.pdf'.format(probability_sick), bbox_inches='tight')
+        plt.close()
 
-    fig = plt.figure()
-    plt.ylabel('expected time to test pop. [days]')
-    plt.plot([0], [0], color='white')
-    if saveFig:
-        plt.savefig(figpath+'ylabel.pdf', bbox_inches='tight')
+    # fig = plt.figure()
+    # plt.ylabel('expected time to test pop. (days)')
+    # plt.plot([0], [0], color='white')
+    # if saveFig:
+    #     plt.savefig(figpath+'ylabel.pdf', bbox_inches='tight')
 
 
 if __name__ == "__main__":
